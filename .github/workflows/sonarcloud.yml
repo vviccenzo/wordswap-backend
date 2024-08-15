@@ -20,7 +20,8 @@ jobs:
         run: mvn clean install
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@latest
+        uses: SonarSource/sonarcloud-github-action@v2.3.0
+            
         with:
           projectBaseDir: .
           args: >
