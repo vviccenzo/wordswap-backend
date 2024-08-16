@@ -17,14 +17,20 @@ public class UserService {
 	private UserRepository userRepository;
 
 	public List<UserResponseDTO> findAll() {
-		return this.userRepository
-				.findAll().stream().map(
-						userModel -> new UserResponseDTO(userModel.getId(), userModel.getUsername()))
-				.toList();
+		return this.userRepository.findAll().stream()
+				.map(userModel -> new UserResponseDTO(userModel.getId(), userModel.getUsername())).toList();
 	}
 
 	@Transactional
 	public UserDTO save(UserCreateDTO dto) {
+		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
+			throw new RuntimeException("User with this email, already exists.");
+		}
+		
+		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
+			throw new RuntimeException("User with this username, already exists.");
+		}
+
 		UserModel model = this.userRepository.save(new UserFactory().createModelFromDto(dto));
 		model.setUserCode(model.getUsername() + "_" + model.getId());
 
