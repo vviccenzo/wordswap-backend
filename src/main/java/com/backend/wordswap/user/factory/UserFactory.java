@@ -5,12 +5,15 @@ import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.dto.UserUpdateDTO;
 import com.backend.wordswap.user.entity.UserModel;
 
+import lombok.experimental.UtilityClass;
+
 import java.time.LocalDate;
 import java.util.List;
 
+@UtilityClass
 public class UserFactory {
 
-    public UserModel createModelFromDto(UserCreateDTO dto) {
+    public static UserModel createModelFromDto(UserCreateDTO dto) {
         UserModel model = new UserModel();
         model.setUsername(dto.getUsername());
         model.setEmail(dto.getEmail());
@@ -20,7 +23,7 @@ public class UserFactory {
         return model;
     }
 
-    public UserModel createModelFromDto(UserUpdateDTO dto, UserModel model) {
+    public static UserModel createModelFromDto(UserUpdateDTO dto, UserModel model) {
         model.setUsername(dto.getUsername());
         model.setPassword(dto.getPassword());
 

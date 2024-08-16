@@ -26,12 +26,12 @@ public class UserService {
 		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
 			throw new RuntimeException("User with this email, already exists.");
 		}
-		
+
 		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
 			throw new RuntimeException("User with this username, already exists.");
 		}
 
-		UserModel model = this.userRepository.save(new UserFactory().createModelFromDto(dto));
+		UserModel model = this.userRepository.save(UserFactory.createModelFromDto(dto));
 		model.setUserCode(model.getUsername() + "_" + model.getId());
 
 		model = this.userRepository.save(model);
@@ -43,7 +43,14 @@ public class UserService {
 	public UserDTO update(UserUpdateDTO dto) {
 		Optional<UserModel> model = this.userRepository.findById(dto.getId());
 		if (model.isPresent()) {
-			UserModel modelToUpdate = new UserFactory().createModelFromDto(dto, model.get());
+			if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
+				throw new RuntimeException("User with this username, already exists.");
+			}
+
+			UserModel modelToUpdate = UserFactory.createModelFromDto(dto, model.get());
+
+			modelToUpdate = this.userRepository.save(modelToUpdate);
+
 			return new UserDTO(modelToUpdate.getId(), modelToUpdate.getUsername(), modelToUpdate.getCreationDate());
 		}
 

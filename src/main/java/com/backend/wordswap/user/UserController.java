@@ -15,22 +15,22 @@ public class UserController {
 	private UserService userService;
 
 	@GetMapping(path = "/find-all", produces = MediaType.APPLICATION_JSON_VALUE)
-	private List<UserResponseDTO> findAll() {
+	public List<UserResponseDTO> findAll() {
 		return this.userService.findAll();
 	}
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	private UserDTO save(@RequestBody UserCreateDTO dto) {
+	public UserDTO save(@RequestBody UserCreateDTO dto) {
 		return this.userService.save(dto);
 	}
 
 	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	private UserDTO update(@RequestBody UserUpdateDTO dto) {
+	public UserDTO update(@RequestBody UserUpdateDTO dto) {
 		return this.userService.update(dto);
 	}
 
 	@DeleteMapping
-	private void deleteUser(@RequestParam("id") Long id) {
+	public void deleteUser(@RequestParam("id") Long id) {
 		this.userService.delete(id);
 	}
 }
