@@ -6,9 +6,9 @@ import lombok.*;
 import java.time.LocalDate;
 
 import com.backend.wordswap.generic.entity.GenericModel;
+import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
-@Setter
-@Getter
+@Data
 @Entity
 @ToString
 @NoArgsConstructor
@@ -32,4 +32,7 @@ public class UserModel extends GenericModel {
 	@Column(name = "creation_date")
 	private LocalDate creationDate;
 
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+	private UserProfileModel userProfile;
+	
 }
