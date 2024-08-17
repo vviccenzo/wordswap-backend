@@ -22,13 +22,15 @@ public class UserFactory {
 		model.setPassword(dto.getPassword());
 		model.setCreationDate(LocalDate.now());
 
-		UserProfileModel profilePic = new UserProfileModel();
-		profilePic.setContent(dto.getFile().getBytes());
-		profilePic.setFileName(dto.getFile().getName());
-		profilePic.setUpdateDate(LocalDate.now());
-		profilePic.setUser(model);
-
-		model.setUserProfile(profilePic);
+		if(dto.getFile() != null && dto.getFile().getBytes().length > 0) {
+			UserProfileModel profilePic = new UserProfileModel();
+			profilePic.setContent(dto.getFile().getBytes());
+			profilePic.setFileName(dto.getFile().getName());
+			profilePic.setUpdateDate(LocalDate.now());
+			profilePic.setUser(model);
+			
+			model.setUserProfile(profilePic);
+		}
 
 		return model;
 	}
