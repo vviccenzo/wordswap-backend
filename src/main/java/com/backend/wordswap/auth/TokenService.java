@@ -22,9 +22,8 @@ public class TokenService {
 	public String generateToken(UserModel user) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(secret);
-			String token = JWT.create().withIssuer("auth-api").withSubject(user.getUsername())
+			return JWT.create().withIssuer("auth-api").withSubject(user.getUsername())
 					.withExpiresAt(genExpirationDate()).sign(algorithm);
-			return token;
 		} catch (JWTCreationException exception) {
 			throw new RuntimeException("Error while generating token", exception);
 		}

@@ -3,7 +3,6 @@ package com.backend.wordswap.auth.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -12,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.backend.wordswap.auth.TokenService;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.exception.UserNotFoundException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,11 +21,14 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
-	@Autowired
-	private TokenService tokenService;
+	private final TokenService tokenService;
+
+	public SecurityFilter(UserRepository userRepository, TokenService tokenService) {
+		this.userRepository = userRepository;
+		this.tokenService = tokenService;
+	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,10 +47,11 @@ public class SecurityFilter extends OncePerRequestFilter {
 			String login = this.tokenService.validateToken(token);
 			Optional<UserModel> optUser = this.userRepository.findByUsername(login);
 			if (optUser.isEmpty()) {
-				throw new RuntimeException("User not valid.");
+				throw new UserNotFoundException("User not valid.");
 			}
 
-			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null, optUser.get().getAuthorities());
+			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null,
+					optUser.get().getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
