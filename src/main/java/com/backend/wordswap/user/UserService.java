@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDTO save(UserCreateDTO dto) {
+	public UserDTO save(UserCreateDTO dto) throws IOException {
 		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
 			throw new RuntimeException("User with this email, already exists.");
 		}
