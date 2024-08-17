@@ -1,9 +1,11 @@
 package com.backend.wordswap.user.factory;
 
+import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.user.dto.UserCreateDTO;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.dto.UserUpdateDTO;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.entity.UserRole;
 import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
 import lombok.experimental.UtilityClass;
@@ -19,16 +21,17 @@ public class UserFactory {
 		UserModel model = new UserModel();
 		model.setUsername(dto.getUsername());
 		model.setEmail(dto.getEmail());
-		model.setPassword(dto.getPassword());
+		model.setPassword(BCryptUtil.encryptPassword(dto.getPassword()));
 		model.setCreationDate(LocalDate.now());
+		model.setRole(UserRole.USER);
 
-		if(dto.getFile() != null && dto.getFile().getBytes().length > 0) {
+		if (dto.getFile() != null && dto.getFile().getBytes().length > 0) {
 			UserProfileModel profilePic = new UserProfileModel();
 			profilePic.setContent(dto.getFile().getBytes());
 			profilePic.setFileName(dto.getFile().getName());
 			profilePic.setUpdateDate(LocalDate.now());
 			profilePic.setUser(model);
-			
+
 			model.setUserProfile(profilePic);
 		}
 
