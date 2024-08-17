@@ -2,65 +2,76 @@ package com.backend.wordswap.user;
 
 import com.backend.wordswap.user.dto.*;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.exception.UserEmailAlreadyExistsException;
+import com.backend.wordswap.user.exception.UserNotFoundException;
+import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;
 import com.backend.wordswap.user.factory.UserFactory;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
+
+	public UserService(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
 
 	public List<UserResponseDTO> findAll() {
-		return this.userRepository.findAll().stream()
+		return userRepository.findAll().stream()
 				.map(userModel -> new UserResponseDTO(userModel.getId(), userModel.getUsername())).toList();
 	}
 
 	@Transactional
 	public UserDTO save(UserCreateDTO dto) throws IOException {
-		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
-			throw new RuntimeException("User with this email, already exists.");
-		}
+		this.validateUser(dto);
 
-		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
-			throw new RuntimeException("User with this username, already exists.");
-		}
-
-		UserModel model = this.userRepository.save(UserFactory.createModelFromDto(dto));
-		model.setUserCode(model.getUsername() + "_" + model.getId());
-
+		UserModel model = UserFactory.createModelFromDto(dto);
 		model = this.userRepository.save(model);
 
-		return new UserDTO(model.getId(), model.getUsername(), model.getCreationDate());
+		model.setUserCode(model.getUsername() + "_" + model.getId());
+
+		UserModel savedModel = this.userRepository.save(model);
+		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate());
 	}
 
 	@Transactional
 	public UserDTO update(UserUpdateDTO dto) {
-		Optional<UserModel> model = this.userRepository.findById(dto.getId());
-		if (model.isPresent()) {
-			if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
-				throw new RuntimeException("User with this username, already exists.");
-			}
+		UserModel modelToUpdate = this.userRepository.findById(dto.getId())
+				.orElseThrow(() -> new UserNotFoundException("User not found."));
 
-			UserModel modelToUpdate = UserFactory.createModelFromDto(dto, model.get());
+		this.validateUser(dto);
 
-			modelToUpdate = this.userRepository.save(modelToUpdate);
+		UserModel updatedModel = UserFactory.createModelFromDto(dto, modelToUpdate);
+		UserModel savedModel = this.userRepository.save(updatedModel);
 
-			return new UserDTO(modelToUpdate.getId(), modelToUpdate.getUsername(), modelToUpdate.getCreationDate());
-		}
-
-		throw new RuntimeException("User not founded.");
+		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate());
 	}
 
 	@Transactional
 	public void delete(Long id) {
+		if (!this.userRepository.existsById(id)) {
+			throw new UserNotFoundException("User not found.");
+		}
 		this.userRepository.deleteById(id);
 	}
 
+	private void validateUser(UserCreateDTO dto) {
+		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
+			throw new UserEmailAlreadyExistsException("User with this email already exists.");
+		}
+		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
+			throw new UsernameAlreadyExistsException("User with this username already exists.");
+		}
+	}
+
+	private void validateUser(UserUpdateDTO dto) {
+		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
+			throw new UsernameAlreadyExistsException("User with this username already exists.");
+		}
+	}
 }

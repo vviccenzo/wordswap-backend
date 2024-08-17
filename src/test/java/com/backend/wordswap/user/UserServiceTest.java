@@ -1,4 +1,4 @@
-package com.backend.wordswap;
+package com.backend.wordswap.user;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,17 +9,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.backend.wordswap.user.UserRepository;
-import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.dto.UserCreateDTO;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.exception.UserEmailAlreadyExistsException;
+import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;
 import com.backend.wordswap.user.factory.UserFactory;
 
 import java.io.IOException;
 import java.util.Optional;
 
-public class UserServiceTest {
+class UserServiceTest {
 
 	@Mock
 	private UserRepository userRepository;
@@ -49,22 +49,24 @@ public class UserServiceTest {
 
 	@Test
 	void save_ShouldThrowException_WhenEmailExists() throws IOException {
-		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", /* file */ null);
+		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", null);
 
-		when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(new UserModel()));
+		when(this.userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(new UserModel()));
 
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> userService.save(dto));
-		assertEquals("User with this email, already exists.", thrown.getMessage());
+		UserEmailAlreadyExistsException thrown = assertThrows(UserEmailAlreadyExistsException.class,
+				() -> this.userService.save(dto));
+		assertEquals("User with this email already exists.", thrown.getMessage());
 	}
 
 	@Test
 	void save_ShouldThrowException_WhenUsernameExists() throws IOException {
-		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", /* file */ null);
+		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", null);
 
-		when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
-		when(userRepository.findByUsername(dto.getUsername())).thenReturn(Optional.of(new UserModel()));
+		when(this.userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
+		when(this.userRepository.findByUsername(dto.getUsername())).thenReturn(Optional.of(new UserModel()));
 
-		RuntimeException thrown = assertThrows(RuntimeException.class, () -> userService.save(dto));
-		assertEquals("User with this username, already exists.", thrown.getMessage());
+		UsernameAlreadyExistsException thrown = assertThrows(UsernameAlreadyExistsException.class,
+				() -> this.userService.save(dto));
+		assertEquals("User with this username already exists.", thrown.getMessage());
 	}
 }

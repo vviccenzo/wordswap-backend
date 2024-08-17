@@ -26,7 +26,7 @@ import lombok.ToString;
 public class UserProfileModel extends GenericModel {
 
 	@OneToOne
-    @JoinColumn(name = "user_id")
+	@JoinColumn(name = "user_id")
 	private UserModel user;
 
 	@Column(name = "content")
