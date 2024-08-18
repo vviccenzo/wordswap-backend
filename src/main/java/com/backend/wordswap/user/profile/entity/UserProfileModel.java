@@ -14,11 +14,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Data
 @Entity
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_profile")
@@ -38,4 +36,9 @@ public class UserProfileModel extends GenericModel {
 	@Column(name = "update_date")
 	private LocalDate updateDate;
 
+	@Override
+	public String toString() {
+		return "UserProfileModel{" + "id=" + getId() + ", fileName='" + fileName + '\'' + ", updateDate=" + updateDate
+				+ '}';
+	}
 }

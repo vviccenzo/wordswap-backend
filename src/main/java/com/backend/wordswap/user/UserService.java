@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -73,5 +74,14 @@ public class UserService {
 		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
 			throw new UsernameAlreadyExistsException("User with this username already exists.");
 		}
+	}
+
+	public List<UserDTO> findFriendsByUserId(Long userId) {
+		Optional<UserModel> optModel = this.userRepository.findById(userId);
+		if (optModel.isPresent()) {
+			return UserFactory.buildList(optModel.get().getFriends());
+		}
+
+		throw new UserNotFoundException("User not founded.");
 	}
 }

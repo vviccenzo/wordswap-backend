@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.wordswap.auth.dto.AuthDTO;
+
 @RestController
 @RequestMapping("/auth")
 public class LoginController {
@@ -16,7 +18,7 @@ public class LoginController {
 	}
 
 	@PostMapping(path = "/login")
-	public String login(@RequestParam("user") String user, @RequestParam("password") String password) {
+	public AuthDTO login(@RequestParam("user") String user, @RequestParam("password") String password) {
 		return this.loginService.login(user, password);
 	}
 

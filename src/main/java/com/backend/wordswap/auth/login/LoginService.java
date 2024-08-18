@@ -1,12 +1,15 @@
 package com.backend.wordswap.auth.login;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.auth.TokenService;
+import com.backend.wordswap.auth.dto.AuthDTO;
 import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.user.UserRepository;
+import com.backend.wordswap.user.dto.UserInfoDTO;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.InvalidCredentialsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
@@ -23,7 +26,7 @@ public class LoginService {
 		this.tokenService = tokenService;
 	}
 
-	public String login(String user, String password) {
+	public AuthDTO login(String user, String password) {
 		Optional<UserModel> optUser = this.userRepository.findByUsername(user);
 		if (optUser.isEmpty()) {
 			throw new UserNotFoundException("User not found.");
@@ -35,7 +38,12 @@ public class LoginService {
 			throw new InvalidCredentialsException("Invalid credentials.");
 		}
 
-		return this.tokenService.generateToken(userModel);
+		String token = this.tokenService.generateToken(userModel);
+		byte[] profilePic = Objects.nonNull(userModel.getUserProfile()) ? userModel.getUserProfile().getContent()
+				: null;
+		UserInfoDTO userInfo = new UserInfoDTO(userModel.getId(), profilePic);
+
+		return new AuthDTO(token, userInfo);
 	}
 
 }

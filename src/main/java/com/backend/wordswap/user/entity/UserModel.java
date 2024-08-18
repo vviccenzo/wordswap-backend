@@ -4,18 +4,20 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.backend.wordswap.friendship.request.entity.FriendshipRequestModel;
 import com.backend.wordswap.generic.entity.GenericModel;
 import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
 @Data
 @Entity
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user")
@@ -42,6 +44,16 @@ public class UserModel extends GenericModel {
 
 	@Column(name = "role")
 	private UserRole role;
+
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "user_friends", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "friend_id"))
+	private List<UserModel> friends = new ArrayList<>();
+
+	@OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<FriendshipRequestModel> receivedFriendshipRequests = new ArrayList<>();
+
+	@OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<FriendshipRequestModel> sentFriendshipRequests = new ArrayList<>();
 
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		if (this.role == UserRole.ADMIN) {
