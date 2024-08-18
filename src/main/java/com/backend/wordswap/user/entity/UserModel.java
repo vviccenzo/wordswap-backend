@@ -17,7 +17,7 @@ import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
 @Data
 @Entity
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user")
