@@ -11,6 +11,7 @@ import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.friendship.request.entity.FriendshipRequestModel;
 import com.backend.wordswap.generic.entity.GenericModel;
 import com.backend.wordswap.user.profile.entity.UserProfileModel;
@@ -54,6 +55,12 @@ public class UserModel extends GenericModel {
 
 	@OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<FriendshipRequestModel> sentFriendshipRequests = new ArrayList<>();
+
+	@OneToMany(mappedBy = "userInitiator", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<ConversationModel> initiatedConversations = new ArrayList<>();
+
+	@OneToMany(mappedBy = "userRecipient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<ConversationModel> receivedConversations = new ArrayList<>();
 
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		if (this.role == UserRole.ADMIN) {

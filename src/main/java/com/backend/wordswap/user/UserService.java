@@ -37,7 +37,7 @@ public class UserService {
 		model.setUserCode(model.getUsername() + "_" + model.getId());
 
 		UserModel savedModel = this.userRepository.save(model);
-		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate());
+		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate(), null);
 	}
 
 	@Transactional
@@ -50,7 +50,7 @@ public class UserService {
 		UserModel updatedModel = UserFactory.createModelFromDto(dto, modelToUpdate);
 		UserModel savedModel = this.userRepository.save(updatedModel);
 
-		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate());
+		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate(), null);
 	}
 
 	@Transactional
@@ -79,7 +79,7 @@ public class UserService {
 	public List<UserDTO> findFriendsByUserId(Long userId) {
 		Optional<UserModel> optModel = this.userRepository.findById(userId);
 		if (optModel.isPresent()) {
-			return UserFactory.buildList(optModel.get().getFriends());
+			return UserFactory.buildList(optModel.get().getFriends(), userId);
 		}
 
 		throw new UserNotFoundException("User not founded.");
