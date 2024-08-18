@@ -15,6 +15,8 @@ import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class FriendshipRequestService {
 
@@ -81,21 +83,25 @@ public class FriendshipRequestService {
 		}
 	}
 
+	@Transactional
 	public void deleteFriendship(Long userId, Long friendId) {
-		Optional<UserModel> model = this.userRepository.findById(userId);
-		if (model.isPresent()) {
-			UserModel modelToUpdate = model.get();
-			modelToUpdate.getFriends().stream().filter(friend -> friend.getId().compareTo(friendId) == 0)
-					.forEach(friend -> {
-						friend.getFriends().removeIf(friendToDelete -> friendToDelete.getId().compareTo(userId) == 0);
+		UserModel user = this.userRepository.findById(userId)
+				.orElseThrow(() -> new UserNotFoundException("User not found."));
 
-						this.userRepository.save(friend);
-					});
+		boolean removed = user.getFriends().removeIf(friend -> friend.getId().equals(friendId));
 
-			this.userRepository.save(modelToUpdate);
+		if (removed) {
+			this.userRepository.save(user);
+
+			UserModel friend = this.userRepository.findById(friendId)
+					.orElseThrow(() -> new UserNotFoundException("Friend not found."));
+
+			friend.getFriends().removeIf(friendToDelete -> friendToDelete.getId().equals(userId));
+
+			this.userRepository.save(friend);
+		} else {
+			throw new UserNotFoundException("Friendship not found.");
 		}
-
-		throw new UserNotFoundException("User not founded.");
 	}
 
 	public List<FriendshipDTO> findAllByUserId(Long userId) {

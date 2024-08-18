@@ -38,4 +38,9 @@ public class UserController {
 	public void deleteUser(@RequestParam("id") Long id) {
 		this.userService.delete(id);
 	}
+
+	@GetMapping(path = "/find-friends", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<UserDTO> findFriends(@RequestParam("userId") Long userId) {
+		return this.userService.findFriendsByUserId(userId);
+	}
 }
