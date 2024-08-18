@@ -15,6 +15,7 @@ import com.backend.wordswap.user.exception.UserNotFoundException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -34,12 +35,10 @@ public class SecurityFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		String path = request.getRequestURI();
-
-		if (("/auth/login".equals(path) || "/user".equals(path)) && "POST".equalsIgnoreCase(request.getMethod())) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+	    if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
+	        filterChain.doFilter(request, response);
+	        return;
+	    }
 
 		String token = this.recoverToken(request);
 
@@ -66,4 +65,13 @@ public class SecurityFilter extends OncePerRequestFilter {
 		return null;
 	}
 
+	private boolean isAllowedPath(ServletRequest request) {
+	    String path = ((HttpServletRequest) request).getRequestURI();
+	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path);
+	}
+
+	private boolean isAllowedMethod(ServletRequest request) {
+	    String method = ((HttpServletRequest) request).getMethod();
+	    return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method);
+	}
 }
