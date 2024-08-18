@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.backend.wordswap.auth.dto.AuthDTO;
 import com.backend.wordswap.auth.login.LoginService;
 import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.user.UserRepository;
@@ -78,9 +79,9 @@ class AuthServiceTest {
 		when(this.userRepository.findByUsername(username)).thenReturn(Optional.of(userModel));
 		when(this.tokenService.generateToken(userModel)).thenReturn("mockedToken");
 
-		String token = this.loginService.login(username, password);
+		AuthDTO token = this.loginService.login(username, password);
 
-		assertEquals("mockedToken", token);
+		assertEquals("mockedToken", token.token());
 	}
 
 }

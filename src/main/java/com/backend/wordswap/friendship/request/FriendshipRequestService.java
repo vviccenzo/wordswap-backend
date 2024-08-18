@@ -99,7 +99,7 @@ public class FriendshipRequestService {
 	}
 
 	public List<FriendshipDTO> findAllByUserId(Long userId) {
-		return this.friendshipRequestRepository.findAllByReceiverId(userId).stream()
+		return this.friendshipRequestRepository.findAllByReceiverIdAndStatus(userId, StatusType.PENDING).stream()
 				.map(FriendshipRequestFactory::buildDTO).toList();
 	}
 }

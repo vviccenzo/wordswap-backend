@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.backend.wordswap.friendship.request.entity.FriendshipRequestModel;
+import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
 
 public interface FriendshipRequestRepository extends JpaRepository<FriendshipRequestModel, Long> {
 
@@ -17,5 +18,5 @@ public interface FriendshipRequestRepository extends JpaRepository<FriendshipReq
 	public Optional<FriendshipRequestModel> findBySenderIdAndTargetUserCode(@RequestParam("senderId") Long senderId,
 			@RequestParam("targetUserCode") String targetUserCode);
 
-	public List<FriendshipRequestModel> findAllByReceiverId(Long userId);
+	public List<FriendshipRequestModel> findAllByReceiverIdAndStatus(Long userId, StatusType status);
 }
