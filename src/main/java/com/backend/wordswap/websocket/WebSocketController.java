@@ -8,9 +8,11 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.message.MessageService;
@@ -25,9 +27,9 @@ public class WebSocketController {
 		this.messageService = messageService;
 	}
 
-	@SendTo("/topic/messages")
-	@MessageMapping("/chat")
-	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws InvalidKeyException,
+	@MessageMapping("/chat/{roomId}")
+	@SendTo("/topic/messages/{roomId}")
+	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId, @RequestBody MessageCreateDTO dto) throws InvalidKeyException,
 			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		return this.messageService.sendMessage(dto);
 	}

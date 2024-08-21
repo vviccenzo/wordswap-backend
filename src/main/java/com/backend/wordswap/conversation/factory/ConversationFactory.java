@@ -21,6 +21,7 @@ public class ConversationFactory {
     public ConversationResponseDTO buildMessages(Long userId, ConversationModel conversationModel) {
         ConversationResponseDTO dto = new ConversationResponseDTO();
         dto.setId(conversationModel.getId());
+        dto.setSenderId(userId);
 
         if(conversationModel.getUserInitiator().getId().compareTo(userId) == 0) {
         	dto.setProfilePic(conversationModel.getUserRecipient().getUserProfile().getContent());
@@ -34,7 +35,7 @@ public class ConversationFactory {
                 .filter(message -> message.getSender().getId().compareTo(userId) == 0)
                 .map(message -> {
 					try {
-						return new MessageRecord(message.getId(),  Encrypt.decrypt(message.getContent()), message.getSender().getUsername(), message.getSentAt());
+						return new MessageRecord(message.getId(),  Encrypt.decrypt(message.getContent()), message.getSender().getUsername(), message.getSentAt(), message.getSender().getId());
 					} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 						throw new RuntimeException(e);
 					}
@@ -45,7 +46,7 @@ public class ConversationFactory {
                 .filter(message -> message.getSender().getId().compareTo(userId) != 0)
                 .map(message -> {
 					try {
-						return new MessageRecord(message.getId(),  Encrypt.decrypt(message.getContent()), message.getSender().getUsername(), message.getSentAt());
+						return new MessageRecord(message.getId(),  Encrypt.decrypt(message.getContent()), message.getSender().getUsername(), message.getSentAt(), message.getSender().getId());
 					} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
 						throw new RuntimeException(e);
 					}    

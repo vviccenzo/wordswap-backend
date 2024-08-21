@@ -15,6 +15,8 @@ public class ConversationResponseDTO {
 
 	private Long id;
 
+	private Long senderId;
+
 	private String conversationName;
 
 	private byte[] profilePic;
