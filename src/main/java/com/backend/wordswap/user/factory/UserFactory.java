@@ -1,6 +1,7 @@
 package com.backend.wordswap.user.factory;
 
 import com.backend.wordswap.auth.util.BCryptUtil;
+import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.user.dto.UserCreateDTO;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.dto.UserUpdateDTO;
@@ -32,9 +33,21 @@ public class UserFactory {
 		return model;
 	}
 
-	public static List<UserDTO> buildList(List<UserModel> users) {
-		return users.stream().map(model -> new UserDTO(model.getId(), model.getUsername(), model.getCreationDate()))
-				.toList();
+	public static List<UserDTO> buildList(List<UserModel> users, Long currentUserId) {
+		return users.stream().map(model -> {
+	        Long conversationId = model.getInitiatedConversations().stream()
+	                .filter(conversation -> conversation.getUserRecipient().getId().equals(currentUserId))
+	                .map(ConversationModel::getId)
+	                .findFirst()
+	                .orElseGet(() -> model.getReceivedConversations().stream()
+	                    .filter(conversation -> conversation.getUserInitiator().getId().equals(currentUserId))
+	                    .map(ConversationModel::getId)
+	                    .findFirst()
+	                    .orElse(null)
+	                );
+			
+			return new UserDTO(model.getId(), model.getUsername(), model.getCreationDate(), conversationId);
+		}).toList();
 	}
 
 	private static void populateUserModelFromCreateDTO(UserCreateDTO dto, UserModel model) {
