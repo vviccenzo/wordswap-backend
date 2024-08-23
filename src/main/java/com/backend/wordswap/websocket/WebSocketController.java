@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.dto.MessageEditDTO;
 
 @Controller
 public class WebSocketController {
@@ -29,9 +30,18 @@ public class WebSocketController {
 
 	@MessageMapping("/chat/{roomId}")
 	@SendTo("/topic/messages/{roomId}")
-	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId, @RequestBody MessageCreateDTO dto) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId,
+			@RequestBody MessageCreateDTO dto) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		return this.messageService.sendMessage(dto);
+	}
+
+	@SendTo("/topic/messages/{roomId}")
+	@MessageMapping("/chat/edit/{roomId}")
+	public List<ConversationResponseDTO> editMessage(@DestinationVariable String roomId,
+			@RequestBody MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		return this.messageService.editMessage(dto);
 	}
 
 }

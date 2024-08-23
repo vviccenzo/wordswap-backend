@@ -33,6 +33,9 @@ public class MessageModel extends GenericModel {
 	@Column(name = "sent_at")
 	private LocalDateTime sentAt;
 
+	@Column(name = "is_edited")
+	private Boolean isEdited;
+
 	public MessageModel(String content, UserModel sender, ConversationModel conversation) {
 		this.content = content;
 		this.sender = sender;
