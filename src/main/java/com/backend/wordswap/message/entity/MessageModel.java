@@ -35,6 +35,9 @@ public class MessageModel extends GenericModel {
 
 	@Column(name = "is_edited")
 	private Boolean isEdited;
+	
+	@Column(name = "is_deleted")
+	private Boolean isDeleted;
 
 	public MessageModel(String content, UserModel sender, ConversationModel conversation) {
 		this.content = content;

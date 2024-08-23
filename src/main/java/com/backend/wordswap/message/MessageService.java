@@ -5,6 +5,7 @@ import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.user.UserRepository;
@@ -57,6 +58,19 @@ public class MessageService {
 		if (optMessage.isPresent()) {
 			optMessage.get().setContent(Encrypt.encrypt(dto.getContent()));
 			optMessage.get().setIsEdited(Boolean.TRUE);
+
+			this.messageRepository.save(optMessage.get());
+
+			return this.conversationService.findAllConversationByUserId(optMessage.get().getSender().getId());
+		}
+
+		throw new RuntimeException("Message not found.");
+	}
+
+	public List<ConversationResponseDTO> deleteMessage(MessageDeleteDTO dto) {
+		Optional<MessageModel> optMessage = this.messageRepository.findById(dto.id());
+		if (optMessage.isPresent()) {
+			optMessage.get().setIsDeleted(Boolean.TRUE);
 
 			this.messageRepository.save(optMessage.get());
 

@@ -61,14 +61,16 @@ public class ConversationFactory {
 		try {
 			return new MessageRecord(message.getId(), Encrypt.decrypt(message.getContent()),
 					message.getSender().getUsername(), message.getSentAt(), message.getSender().getId(),
-					Objects.nonNull(message.getIsEdited()) ? message.getIsEdited() : Boolean.FALSE);
+					Objects.nonNull(message.getIsEdited()) ? message.getIsEdited() : Boolean.FALSE,
+					Objects.nonNull(message.getIsDeleted()) ? message.getIsDeleted() : Boolean.FALSE);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
 				| BadPaddingException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> userMessages, List<MessageRecord> targetUserMessages) {
+	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> userMessages,
+			List<MessageRecord> targetUserMessages) {
 		Map.Entry<LocalDateTime, String> lastUserMessage = getLastMessageEntry(userMessages);
 		Map.Entry<LocalDateTime, String> lastTargetUserMessage = getLastMessageEntry(targetUserMessages);
 

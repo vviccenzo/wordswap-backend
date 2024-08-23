@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 
 @Controller
@@ -42,6 +43,13 @@ public class WebSocketController {
 			@RequestBody MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException,
 			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		return this.messageService.editMessage(dto);
+	}
+
+	@SendTo("/topic/messages/{roomId}")
+	@MessageMapping("/chat/delete/{roomId}")
+	public List<ConversationResponseDTO> deleteMessage(@DestinationVariable String roomId,
+			@RequestBody MessageDeleteDTO dto) {
+		return this.messageService.deleteMessage(dto);
 	}
 
 }
