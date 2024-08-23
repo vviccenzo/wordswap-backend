@@ -1,8 +1,10 @@
 package com.backend.wordswap.message.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class MessageCreateDTO {
 
     private Long senderId;
@@ -17,4 +19,9 @@ public class MessageCreateDTO {
 
     private String targetLanguage;
 
+    public MessageCreateDTO(Long senderId, String content, Long receiverId) {
+    	this.senderId = senderId;
+    	this.content = content;
+    	this.receiverId = receiverId;
+    }
 }

@@ -5,6 +5,7 @@ import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -30,7 +32,7 @@ public class MessageService {
 
 	private final ConversationService conversationService;
 
-	MessageService(MessageRepository messageRepository, UserRepository userRepository,
+	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
 			ConversationService conversationService) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
@@ -48,4 +50,19 @@ public class MessageService {
 		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
 	}
 
+	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws InvalidKeyException,
+			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+
+		Optional<MessageModel> optMessage = this.messageRepository.findById(dto.getId());
+		if (optMessage.isPresent()) {
+			optMessage.get().setContent(Encrypt.encrypt(dto.getContent()));
+			optMessage.get().setIsEdited(Boolean.TRUE);
+
+			this.messageRepository.save(optMessage.get());
+
+			return this.conversationService.findAllConversationByUserId(optMessage.get().getSender().getId());
+		}
+
+		throw new RuntimeException("Message not found.");
+	}
 }
