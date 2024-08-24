@@ -19,7 +19,7 @@ public class ConversationResponseDTO {
 
 	private String conversationName;
 
-	private byte[] profilePic;
+	private String profilePic;
 
 	private Map<LocalDateTime, String> lastMessage;
 

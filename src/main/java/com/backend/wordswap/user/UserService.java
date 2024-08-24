@@ -37,20 +37,17 @@ public class UserService {
 		model.setUserCode(model.getUsername() + "_" + model.getId());
 
 		UserModel savedModel = this.userRepository.save(model);
-		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate(), null);
+
+		return new UserDTO(savedModel);
 	}
 
 	@Transactional
 	public UserDTO update(UserUpdateDTO dto) {
-		UserModel modelToUpdate = this.userRepository.findById(dto.getId())
-				.orElseThrow(() -> new UserNotFoundException("User not found."));
-
-		this.validateUser(dto);
-
+		UserModel modelToUpdate = this.userRepository.findById(dto.getId()).orElseThrow(() -> new UserNotFoundException("User not found."));
 		UserModel updatedModel = UserFactory.createModelFromDto(dto, modelToUpdate);
 		UserModel savedModel = this.userRepository.save(updatedModel);
 
-		return new UserDTO(savedModel.getId(), savedModel.getUsername(), savedModel.getCreationDate(), null);
+		return new UserDTO(savedModel);
 	}
 
 	@Transactional
@@ -58,6 +55,7 @@ public class UserService {
 		if (!this.userRepository.existsById(id)) {
 			throw new UserNotFoundException("User not found.");
 		}
+
 		this.userRepository.deleteById(id);
 	}
 
@@ -65,12 +63,6 @@ public class UserService {
 		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
 			throw new UserEmailAlreadyExistsException("User with this email already exists.");
 		}
-		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
-			throw new UsernameAlreadyExistsException("User with this username already exists.");
-		}
-	}
-
-	private void validateUser(UserUpdateDTO dto) {
 		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
 			throw new UsernameAlreadyExistsException("User with this username already exists.");
 		}
@@ -84,4 +76,5 @@ public class UserService {
 
 		throw new UserNotFoundException("User not founded.");
 	}
+
 }

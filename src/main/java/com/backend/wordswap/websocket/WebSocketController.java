@@ -23,8 +23,8 @@ import com.backend.wordswap.message.dto.MessageEditDTO;
 @Controller
 public class WebSocketController {
 
-	private MessageService messageService;
-
+	private final MessageService messageService;
+	
 	public WebSocketController(MessageService messageService) {
 		this.messageService = messageService;
 	}

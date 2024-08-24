@@ -14,6 +14,8 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.InvalidCredentialsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 
+import io.micrometer.common.util.StringUtils;
+
 @Service
 public class LoginService {
 
@@ -41,7 +43,8 @@ public class LoginService {
 		String token = this.tokenService.generateToken(userModel);
 		byte[] profilePic = Objects.nonNull(userModel.getUserProfile()) ? userModel.getUserProfile().getContent()
 				: null;
-		UserInfoDTO userInfo = new UserInfoDTO(userModel.getId(), profilePic);
+		UserInfoDTO userInfo = new UserInfoDTO(userModel.getId(), profilePic, userModel.getName(),
+				StringUtils.isNotBlank(userModel.getBio()) ? userModel.getBio() : "");
 
 		return new AuthDTO(token, userInfo);
 	}

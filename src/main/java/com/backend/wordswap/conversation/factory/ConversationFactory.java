@@ -9,6 +9,7 @@ import com.backend.wordswap.message.entity.MessageModel;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,8 @@ public class ConversationFactory {
 		dto.setProfilePic(getProfilePic(conversationModel, isInitiator));
 		dto.setConversationName(getConversationName(conversationModel, isInitiator));
 
-		List<MessageRecord> userMessages = getDecryptedMessages(conversationModel, userId, true);
-		List<MessageRecord> targetUserMessages = getDecryptedMessages(conversationModel, userId, false);
+		List<MessageRecord> userMessages = this.getDecryptedMessages(conversationModel, userId, true);
+		List<MessageRecord> targetUserMessages = this.getDecryptedMessages(conversationModel, userId, false);
 
 		dto.setUserMessages(userMessages);
 		dto.setTargetUserMessages(targetUserMessages);
@@ -40,9 +41,14 @@ public class ConversationFactory {
 		return dto;
 	}
 
-	private byte[] getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
-		return isInitiator ? conversationModel.getUserRecipient().getUserProfile().getContent()
-				: conversationModel.getUserInitiator().getUserProfile().getContent();
+	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
+		return isInitiator
+				? this.convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent())
+				: this.convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+	}
+
+	public String convertByteArrayToBase64(byte[] imageBytes) {
+		return Base64.getEncoder().encodeToString(imageBytes);
 	}
 
 	private String getConversationName(ConversationModel conversationModel, boolean isInitiator) {
@@ -91,7 +97,7 @@ public class ConversationFactory {
 			return lastMessage;
 		}
 
-		return null;
+		return new HashMap<>();
 	}
 
 	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> messages) {
