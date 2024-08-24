@@ -2,8 +2,10 @@ package com.backend.wordswap.user.dto;
 
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Objects;
 
 import com.backend.wordswap.user.entity.UserModel;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,7 +36,7 @@ public class UserDTO {
 	}
 
 	private String getProfilePic(UserModel user) {
-		return this.convertByteArrayToBase64(user.getUserProfile().getContent());
+		return Objects.nonNull(user.getUserProfile()) ? this.convertByteArrayToBase64(user.getUserProfile().getContent()) : "";
 	}
 
 	public String convertByteArrayToBase64(byte[] imageBytes) {

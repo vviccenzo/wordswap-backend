@@ -79,8 +79,19 @@ public class UserFactory {
 	private static void populateUserModelFromUpdateDTO(UserUpdateDTO dto, UserModel model) throws IOException {
 		model.setName(dto.getName());
 		model.setBio(dto.getBio());
-		if (Objects.nonNull(dto.getFile())) {
-			model.getUserProfile().setContent(dto.getFile().getBytes());
+
+		if (Objects.nonNull(dto.getFile()) ) {
+			if(Objects.nonNull(model.getUserProfile())) {
+				model.getUserProfile().setContent(dto.getFile().getBytes());
+			} else {
+				UserProfileModel profileModel = new UserProfileModel();
+				profileModel.setContent(dto.getFile().getBytes());
+				profileModel.setFileName(dto.getFile().getOriginalFilename());
+				profileModel.setUpdateDate(LocalDate.now());
+				profileModel.setUser(model);
+
+				model.setUserProfile(profileModel);
+			}
 		}
 	}
 
