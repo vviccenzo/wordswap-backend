@@ -64,6 +64,7 @@ public class ConversationService {
 				.orElseThrow(EntityNotFoundException::new) : this.createNewConversation(dto);
 	}
 
+	@Transactional
 	public void deleteConversartion(ConversartionDeleteDTO dto) {
 		Optional<ConversationModel> optConv = this.conversationRepository.findById(dto.getId());
 		if (optConv.isEmpty()) {
