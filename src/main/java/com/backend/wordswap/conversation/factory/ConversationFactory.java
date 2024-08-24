@@ -5,6 +5,7 @@ import com.backend.wordswap.conversation.dto.MessageRecord;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.user.entity.UserModel;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -26,7 +27,9 @@ public class ConversationFactory {
 		dto.setId(conversationModel.getId());
 		dto.setSenderId(userId);
 
-		boolean isInitiator = conversationModel.getUserInitiator().getId().equals(userId);
+		UserModel initiator = conversationModel.getUserInitiator();
+		boolean isInitiator = initiator != null && initiator.getId().equals(userId);
+
 		dto.setProfilePic(getProfilePic(conversationModel, isInitiator));
 		dto.setConversationName(getConversationName(conversationModel, isInitiator));
 
@@ -42,9 +45,21 @@ public class ConversationFactory {
 	}
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
-		return isInitiator
-				? this.convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent())
-				: this.convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+		if (isInitiator) {
+			if (Objects.nonNull(conversationModel.getUserRecipient())) {
+				return this
+						.convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+			} else {
+				return "";
+			}
+		} else {
+			if (Objects.nonNull(conversationModel.getUserInitiator())) {
+				return this
+						.convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+			} else {
+				return "";
+			}
+		}
 	}
 
 	public String convertByteArrayToBase64(byte[] imageBytes) {
@@ -52,8 +67,19 @@ public class ConversationFactory {
 	}
 
 	private String getConversationName(ConversationModel conversationModel, boolean isInitiator) {
-		return isInitiator ? conversationModel.getUserRecipient().getUsername()
-				: conversationModel.getUserInitiator().getUsername();
+		if (isInitiator) {
+			if (Objects.nonNull(conversationModel.getUserInitiator())) {
+				return conversationModel.getUserInitiator().getUsername();
+			} else {
+				return "";
+			}
+		} else {
+			if (Objects.nonNull(conversationModel.getUserRecipient())) {
+				return conversationModel.getUserRecipient().getUsername();
+			} else {
+				return "";
+			}
+		}
 	}
 
 	private List<MessageRecord> getDecryptedMessages(ConversationModel conversationModel, Long userId,

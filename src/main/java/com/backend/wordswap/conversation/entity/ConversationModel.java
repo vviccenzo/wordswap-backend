@@ -35,4 +35,10 @@ public class ConversationModel extends GenericModel {
 	@Column(name = "created_date")
 	private LocalDate createdDate;
 
+	@Column(name = "is_deleted_initiator")
+	private Boolean isDeletedInitiator;
+
+	@Column(name = "is_deleted_recipient")
+	private Boolean isDeletedRecipient;
+
 }
