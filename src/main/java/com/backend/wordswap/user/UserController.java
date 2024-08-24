@@ -29,9 +29,14 @@ public class UserController {
 		return this.userService.save(new UserCreateDTO(username, email, password, file));
 	}
 
-	@PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public UserDTO update(@RequestBody UserUpdateDTO dto) {
-		return this.userService.update(dto);
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public UserDTO update(
+        @RequestParam Long id,
+        @RequestParam String name,
+        @RequestParam String bio,
+        @RequestParam(required = false) MultipartFile file
+    ) {
+		return this.userService.update(new UserUpdateDTO(id, name, bio, file));
 	}
 
 	@DeleteMapping

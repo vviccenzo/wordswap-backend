@@ -44,7 +44,7 @@ class UserServiceTest {
 		UserDTO result = this.userService.save(dto);
 
 		assertNotNull(result);
-		assertEquals(dto.getUsername(), result.label());
+		assertEquals(dto.getUsername(), result.getLabel());
 	}
 
 	@Test

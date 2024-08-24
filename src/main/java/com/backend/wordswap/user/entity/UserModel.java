@@ -36,6 +36,12 @@ public class UserModel extends GenericModel {
 
 	@Column(name = "user_code", unique = true)
 	private String userCode;
+	
+	@Column(name = "name")
+	private String name;
+	
+	@Column(name = "bio")
+	private String bio;
 
 	@Column(name = "creation_date")
 	private LocalDate creationDate;
