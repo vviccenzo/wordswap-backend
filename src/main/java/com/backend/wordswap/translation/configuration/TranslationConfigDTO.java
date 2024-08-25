@@ -13,7 +13,7 @@ public class TranslationConfigDTO {
 
 	private Long receiverId;
 
-	private Long conversartionId;
+	private Long conversationId;
 
 	private String receivingTranslation;
 

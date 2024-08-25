@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.backend.wordswap.chat.ChatResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -23,7 +24,7 @@ public class GeminiAPIService {
 
 	private static final String PROMPT = "Preciso que você traduza essa mensagem: %s. Para esta lingua: %s, e me retorne somente a tradução e nada mais.";
 
-	public String translateText(String text, String language) {
+	public String translateText(String text, String language) throws Exception {
 		String apiUrl = String.format(API_URL_TEMPLATE, GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -50,10 +51,23 @@ public class GeminiAPIService {
 
 		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
 
-		return response.getBody();
+		return this.extractTextFromResponse(response.getBody());
 	}
 
 	private String formatPrompt(String text, String language) {
 		return String.format(PROMPT, text, language);
+	}
+	
+	public String extractTextFromResponse(String jsonResponse) throws Exception {
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    ChatResponse chatResponse = objectMapper.readValue(jsonResponse, ChatResponse.class);
+
+	    if (chatResponse.getCandidates() != null && chatResponse.getCandidates().length > 0) {
+	        ChatResponse.Candidates candidate = chatResponse.getCandidates()[0];
+	        if (candidate.getContent() != null && candidate.getContent().getParts().length > 0) {
+	            return candidate.getContent().getParts()[0].getText();
+	        }
+	    }
+	    return null;
 	}
 }

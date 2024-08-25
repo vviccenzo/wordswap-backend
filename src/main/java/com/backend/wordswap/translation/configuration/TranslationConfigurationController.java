@@ -16,7 +16,7 @@ public class TranslationConfigurationController {
 		this.translationConfigurationService = translationConfigurationService;
 	}
 
-	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/configuration")
 	public void configurateTranslation(@RequestBody TranslationConfigDTO dto) {
 		this.translationConfigurationService.configurateTranslation(dto);
 	}

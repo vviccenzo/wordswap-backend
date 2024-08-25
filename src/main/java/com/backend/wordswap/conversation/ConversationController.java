@@ -2,6 +2,9 @@ package com.backend.wordswap.conversation;
 
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.translation.configuration.TranslationConfigDTO;
+import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,9 @@ public class ConversationController {
 	@Autowired
 	private ConversationService conversationService;
 
+	@Autowired
+	private TranslationConfigurationService translationConfigurationService;
+
 	@GetMapping(path = "/load-conversations", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ConversationResponseDTO> findAllConversationByUserId(@RequestParam("userId") Long userId) {
 		return this.conversationService.findAllConversationByUserId(userId);
@@ -28,5 +34,10 @@ public class ConversationController {
 	@PostMapping(path = "/delete-conversation")
 	public void deleteConversartion(@RequestBody ConversartionDeleteDTO dto) {
 		this.conversationService.deleteConversartion(dto);
+	}
+
+	@PostMapping(path = "/configuration")
+	public void configurateTranslation(@RequestBody TranslationConfigDTO dto) {
+		this.translationConfigurationService.configurateTranslation(dto);
 	}
 }

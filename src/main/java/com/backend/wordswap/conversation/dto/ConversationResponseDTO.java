@@ -16,6 +16,8 @@ public class ConversationResponseDTO {
 	private Long id;
 
 	private Long senderId;
+	
+	private Long receiverId;
 
 	private String conversationName;
 

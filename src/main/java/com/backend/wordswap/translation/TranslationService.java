@@ -1,13 +1,11 @@
 package com.backend.wordswap.translation;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.translation.dto.TranslationDTO;
-import com.backend.wordswap.translation.entity.TranslationModel;
 import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.Translate.LanguageListOption;
 import com.google.cloud.translate.TranslateOptions;
@@ -17,12 +15,6 @@ public class TranslationService {
 
 	@Value("${api.cloud.translate.key}")
 	private static String API_CLOUD_TRANSLATE_KEY;
-
-	private final TranslationRepository translationRepository;
-
-	public TranslationService(TranslationRepository translationRepository) {
-		this.translationRepository = translationRepository;
-	}
 
 	@SuppressWarnings("deprecation")
 	public List<TranslationDTO> findOptionsTranslation() {
@@ -39,10 +31,4 @@ public class TranslationService {
 		return translate.detect(text).getLanguage();
 	}
 
-	public Optional<TranslationModel> findTranslationByContent(String baseLanguage, String targetLanguage,
-			String content) {
-		return this.translationRepository.findAllByLanguageCodeBaseAndLanguageCodeTarget(baseLanguage, targetLanguage)
-				.stream().filter(translationModel -> translationModel.getContentBase().equalsIgnoreCase(content))
-				.findFirst();
-	}
 }

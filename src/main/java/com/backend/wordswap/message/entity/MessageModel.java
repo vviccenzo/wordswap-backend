@@ -2,6 +2,7 @@ package com.backend.wordswap.message.entity;
 
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
+import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.entity.UserModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,9 @@ public class MessageModel extends GenericModel {
 	@JoinColumn(name = "sender_id")
 	private UserModel sender;
 
+	@OneToOne(cascade = CascadeType.ALL)
+	private TranslationModel translation;
+
 	@Column(name = "content")
 	private String content;
 
@@ -35,7 +39,7 @@ public class MessageModel extends GenericModel {
 
 	@Column(name = "is_edited")
 	private Boolean isEdited;
-	
+
 	@Column(name = "is_deleted")
 	private Boolean isDeleted;
 

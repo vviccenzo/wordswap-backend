@@ -4,8 +4,8 @@ import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.dto.MessageRecord;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
+import com.backend.wordswap.message.dto.MessageContent;
 import com.backend.wordswap.message.entity.MessageModel;
-import com.backend.wordswap.user.entity.UserModel;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -26,9 +27,9 @@ public class ConversationFactory {
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conversationModel.getId());
 		dto.setSenderId(userId);
+		dto.setReceiverId(conversationModel.getUserRecipient().getId());
 
-		UserModel initiator = conversationModel.getUserInitiator();
-		boolean isInitiator = initiator != null && initiator.getId().equals(userId);
+		boolean isInitiator = conversationModel.getUserInitiator().getId().equals(userId);
 
 		dto.setProfilePic(getProfilePic(conversationModel, isInitiator));
 		dto.setConversationName(getConversationName(conversationModel, isInitiator));
@@ -38,7 +39,6 @@ public class ConversationFactory {
 
 		dto.setUserMessages(userMessages);
 		dto.setTargetUserMessages(targetUserMessages);
-
 		dto.setLastMessage(determineLastMessage(userMessages, targetUserMessages));
 
 		return dto;
@@ -67,23 +67,11 @@ public class ConversationFactory {
 	}
 
 	private String getConversationName(ConversationModel conversationModel, boolean isInitiator) {
-		if (isInitiator) {
-			if (Objects.nonNull(conversationModel.getUserInitiator())) {
-				return conversationModel.getUserInitiator().getUsername();
-			} else {
-				return "";
-			}
-		} else {
-			if (Objects.nonNull(conversationModel.getUserRecipient())) {
-				return conversationModel.getUserRecipient().getUsername();
-			} else {
-				return "";
-			}
-		}
+		return isInitiator ? conversationModel.getUserRecipient().getUsername()
+				: conversationModel.getUserInitiator().getUsername();
 	}
 
-	private List<MessageRecord> getDecryptedMessages(ConversationModel conversationModel, Long userId,
-			boolean isUserMessages) {
+	private List<MessageRecord> getDecryptedMessages(ConversationModel conversationModel, Long userId, boolean isUserMessages) {
 		return conversationModel.getMessages().stream()
 				.filter(message -> (message.getSender().getId().equals(userId)) == isUserMessages)
 				.map(this::decryptMessage).toList();
@@ -91,10 +79,17 @@ public class ConversationFactory {
 
 	private MessageRecord decryptMessage(MessageModel message) {
 		try {
-			return new MessageRecord(message.getId(), Encrypt.decrypt(message.getContent()),
-					message.getSender().getUsername(), message.getSentAt(), message.getSender().getId(),
-					Objects.nonNull(message.getIsEdited()) ? message.getIsEdited() : Boolean.FALSE,
-					Objects.nonNull(message.getIsDeleted()) ? message.getIsDeleted() : Boolean.FALSE);
+			return MessageRecord.builder().id(message.getId()).content(Encrypt.decrypt(message.getContent()))
+					.sender(message.getSender().getUsername()).timeStamp(message.getSentAt())
+					.senderId(message.getSender().getId())
+					.isEdited(Optional.ofNullable(message.getIsEdited()).orElse(false))
+					.isDeleted(Optional.ofNullable(message.getIsDeleted()).orElse(false))
+					.messageContent(new MessageContent(Encrypt.decrypt(message.getContent()),
+							Objects.nonNull(message.getTranslation()) ? message.getTranslation().getContentSending()
+									: Encrypt.decrypt(message.getContent()),
+							Objects.nonNull(message.getTranslation()) ? message.getTranslation().getContentReceiver()
+									: Encrypt.decrypt(message.getContent())))
+					.build();
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
 				| BadPaddingException e) {
 			throw new RuntimeException(e);
@@ -128,6 +123,6 @@ public class ConversationFactory {
 
 	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> messages) {
 		return messages.stream().reduce((first, second) -> second)
-				.map(message -> Map.entry(message.timeStamp(), message.content())).orElse(null);
+				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
 	}
 }

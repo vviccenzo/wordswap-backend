@@ -9,10 +9,9 @@ import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.entity.MessageModel;
-import com.backend.wordswap.translation.TranslationRepository;
-import com.backend.wordswap.translation.TranslationService;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
+import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
@@ -22,90 +21,85 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 @Service
 @Transactional
 public class MessageService {
 
 	private final GeminiAPIService geminiAPIService;
-	private final TranslationService translationService;
 	private final ConversationService conversationService;
 
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
-	private final TranslationRepository translationRepository;
 	private final TranslationConfigurationRepository translationConfigRepository;
 
 	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
-			ConversationService conversationService, TranslationService translationService,
-			GeminiAPIService geminiAPIService, TranslationRepository translationRepository,
+			ConversationService conversationService, GeminiAPIService geminiAPIService,
 			TranslationConfigurationRepository translationConfigRepository) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
-		this.translationService = translationService;
 		this.geminiAPIService = geminiAPIService;
-		this.translationRepository = translationRepository;
 		this.translationConfigRepository = translationConfigRepository;
 	}
 
 	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
 		ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
+		TranslationModel translation = this.processContent(dto);
 
-		String content = this.processContent(dto);
-
-		this.saveMessage(content, sender, conversation);
+		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
 
 		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
 	}
 
-	private String processContent(MessageCreateDTO dto) throws Exception {
-		if (!dto.getIsTranslation().booleanValue()) {
-			return Encrypt.encrypt(dto.getContent());
-		}
-
-		return this.handleTranslation(dto);
-	}
-
-	private String handleTranslation(MessageCreateDTO dto) throws Exception {
-		String content = dto.getContent();
-		String targetLang = dto.getTargetLanguage();
-		String baseLanguage = this.translationService.detectLanguage(content);
-
-		Optional<TranslationModel> optTranslation = this.translationService.findTranslationByContent(baseLanguage,
-				targetLang, content);
-		if (optTranslation.isPresent()) {
-			return optTranslation.get().getContentTranslated();
-		}
-
+	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
 		List<TranslationConfigurationModel> configs = this.translationConfigRepository
 				.findAllByConversationId(dto.getConversationId());
+
+		TranslationModel translation = new TranslationModel();
+		String content = dto.getContent();
 
 		List<TranslationConfigurationModel> senderConfigs = configs.stream()
 				.filter(f -> dto.getSenderId().compareTo(f.getUser().getId()) == 0).toList();
 
 		if (!CollectionUtils.isEmpty(senderConfigs)) {
+			TranslationConfigurationModel configSender = this.getTranslation(senderConfigs, TranslationType.SENDING);
+			if (Objects.nonNull(configSender)) {
+				translation.setLanguageCodeSending(configSender.getTargetLanguage());
 
+				String contentTranslated = this.geminiAPIService.translateText(content, configSender.getTargetLanguage());
+				translation.setContentSending(contentTranslated);
+			}
 		}
 
 		List<TranslationConfigurationModel> receiverConfigs = configs.stream()
 				.filter(f -> dto.getReceiverId().compareTo(f.getUser().getId()) == 0).toList();
 
 		if (!CollectionUtils.isEmpty(receiverConfigs)) {
+			TranslationConfigurationModel configReceiver = this.getTranslation(senderConfigs, TranslationType.RECEIVING);
+			if (Objects.nonNull(configReceiver)) {
+				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
 
+				String contentTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
+				translation.setContentReceiver(contentTranslated);
+			}
 		}
 
-		String contentTranslated = this.geminiAPIService.translateText(content, targetLang);
-
-		this.translationRepository.save(new TranslationModel(baseLanguage, content, targetLang, contentTranslated));
-
-		return contentTranslated;
+		return translation;
 	}
 
-	private void saveMessage(String content, UserModel sender, ConversationModel conversation) {
+	private TranslationConfigurationModel getTranslation(List<TranslationConfigurationModel> senderConfigs,
+			TranslationType type) {
+		return senderConfigs.stream().filter(f -> type.equals(f.getType()) && f.getIsActive()).findFirst().orElse(null);
+	}
+
+	private void saveMessage(String content, UserModel sender, ConversationModel conversation, TranslationModel translation) {
 		MessageModel message = new MessageModel(content, sender, conversation);
+		if (Objects.nonNull(translation)) {
+			message.setTranslation(translation);
+		}
 
 		this.messageRepository.save(message);
 	}

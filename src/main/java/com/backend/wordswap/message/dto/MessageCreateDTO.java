@@ -17,10 +17,6 @@ public class MessageCreateDTO {
 
     private String content;
 
-    private Boolean isTranslation = Boolean.FALSE;
-
-    private String targetLanguage;
-
     public MessageCreateDTO(Long senderId, String content, Long receiverId) {
     	this.senderId = senderId;
     	this.content = content;
