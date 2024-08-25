@@ -32,6 +32,7 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/user").permitAll()
 						.requestMatchers(HttpMethod.GET,  "/ws", "/ws/**").permitAll()
 			            .requestMatchers(HttpMethod.POST, "/ws", "/ws/**" ).permitAll()
+			            .requestMatchers(HttpMethod.GET, "/translation/**").permitAll()
 						.anyRequest().authenticated())
 				.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class).build();
 	}

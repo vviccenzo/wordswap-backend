@@ -67,7 +67,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
 	private boolean isAllowedPath(ServletRequest request) {
 	    String path = ((HttpServletRequest) request).getRequestURI();
-	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path);
+	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path) || path.contains("/translation");
 	}
 
 	private boolean isAllowedMethod(ServletRequest request) {
