@@ -6,6 +6,7 @@ import com.backend.wordswap.message.entity.MessageModel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -27,13 +28,15 @@ public class TranslationModel extends GenericModel {
 	@Column(name = "language_code_sending")
 	private String languageCodeSending;
 
-	@Column(name = "content_sending")
+	@Lob
+	@Column(name = "content_sending_new")
 	private String contentSending;
 
 	@Column(name = "language_code_receiver")
 	private String languageCodeReceiver;
 
-	@Column(name = "content_receiver")
+	@Lob
+	@Column(name = "content_receiver_new")
 	private String contentReceiver;
 
 }

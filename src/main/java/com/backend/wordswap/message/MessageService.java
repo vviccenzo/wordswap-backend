@@ -78,7 +78,7 @@ public class MessageService {
 				.filter(f -> dto.getReceiverId().compareTo(f.getUser().getId()) == 0).toList();
 
 		if (!CollectionUtils.isEmpty(receiverConfigs)) {
-			TranslationConfigurationModel configReceiver = this.getTranslation(senderConfigs, TranslationType.RECEIVING);
+			TranslationConfigurationModel configReceiver = this.getTranslation(receiverConfigs, TranslationType.RECEIVING);
 			if (Objects.nonNull(configReceiver)) {
 				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
 
