@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+
 @RestController
 @RequestMapping("/translation-configuration")
 public class TranslationConfigurationController {
@@ -16,7 +18,7 @@ public class TranslationConfigurationController {
 	}
 
 	@PostMapping(path = "/configuration")
-	public void configurateTranslation(@RequestBody TranslationConfigDTO dto) {
-		this.translationConfigurationService.configurateTranslation(dto);
+	public TranslationConfigResponseDTO configurateTranslation(@RequestBody TranslationConfigDTO dto) {
+		return this.translationConfigurationService.configurateTranslation(dto);
 	}
 }

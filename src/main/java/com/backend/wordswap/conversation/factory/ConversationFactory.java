@@ -7,7 +7,6 @@ import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.dto.MessageContent;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
-import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 
 import java.security.InvalidKeyException;
@@ -74,10 +73,14 @@ public class ConversationFactory {
 	}
 
 	private String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
-		return conversation.getTranslationConfigurations().stream()
-				.filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type)
-						&& config.getIsActive())
-				.map(TranslationConfigurationModel::getTargetLanguage).findFirst().orElse("");
+	    return conversation.getTranslationConfigurations().stream()
+	        .filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
+	        .map(trans -> {
+	            String[] parts = trans.getTargetLanguage().split(" - ");
+	            return parts.length > 1 ? parts[1] : "";
+	        })
+	        .findFirst()
+	        .orElse("");
 	}
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {

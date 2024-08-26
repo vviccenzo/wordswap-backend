@@ -44,6 +44,8 @@ public class TranslationConfigurationService {
 			throw new EntityNotFoundException("Conversa não encontrada com o id: " + dto.getConversationId());
 		}
 
+		this.translationConfigurationRepository.deleteAllByUserIdAndConversationId(dto.getUserId(), dto.getConversationId());
+
 		TranslationConfigurationModel configReceiving = new TranslationConfigurationModel();
 		configReceiving.setConversation(optConv.get());
 		configReceiving.setUser(optUser.get());
@@ -63,10 +65,10 @@ public class TranslationConfigurationService {
 		this.translationConfigurationRepository.save(configSending);
 
 		TranslationConfigResponseDTO config = new TranslationConfigResponseDTO();
-		dto.setIsSendingTranslation(dto.getIsSendingTranslation());
-		dto.setIsReceivingTranslation(dto.getIsReceivingTranslation());
-		dto.setSendingTranslation(dto.getSendingTranslation());
-		dto.setReceivingTranslation(dto.getReceivingTranslation());
+		config.setIsSendingTranslation(dto.getIsSendingTranslation());
+		config.setIsReceivingTranslation(dto.getIsReceivingTranslation());
+		config.setSendingTranslation(dto.getSendingTranslation());
+		config.setReceivingTranslation(dto.getReceivingTranslation());
 
 		return config;
 	}
