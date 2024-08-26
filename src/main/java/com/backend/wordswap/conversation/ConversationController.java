@@ -4,6 +4,7 @@ import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.translation.configuration.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -37,7 +38,7 @@ public class ConversationController {
 	}
 
 	@PostMapping(path = "/configuration")
-	public void configurateTranslation(@RequestBody TranslationConfigDTO dto) {
-		this.translationConfigurationService.configurateTranslation(dto);
+	public TranslationConfigResponseDTO configurateTranslation(@RequestBody TranslationConfigDTO dto) {
+		return this.translationConfigurationService.configurateTranslation(dto);
 	}
 }

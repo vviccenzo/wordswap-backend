@@ -51,4 +51,9 @@ public class ConversationModel extends GenericModel {
 				translationConfigurationModel -> translationConfigurationModel.getUser().getId().compareTo(userId) == 0)
 				.findFirst().orElse(null);
 	}
+	
+	@Transient
+	public List<MessageModel> getMessages() {
+		return this.messages;
+	}
 }

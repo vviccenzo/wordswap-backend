@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 import com.backend.wordswap.user.UserRepository;
@@ -32,7 +33,7 @@ public class TranslationConfigurationService {
 		this.convRepository = convRepository;
 	}
 
-	public void configurateTranslation(TranslationConfigDTO dto) {
+	public TranslationConfigResponseDTO configurateTranslation(TranslationConfigDTO dto) {
 		Optional<UserModel> optUser = this.userRepository.findById(dto.getUserId());
 		if (optUser.isEmpty()) {
 			throw new UserNotFoundException("Usuário não encontrado com o id: " + dto.getUserId());
@@ -44,7 +45,6 @@ public class TranslationConfigurationService {
 		}
 
 		TranslationConfigurationModel configReceiving = new TranslationConfigurationModel();
-
 		configReceiving.setConversation(optConv.get());
 		configReceiving.setUser(optUser.get());
 		configReceiving.setType(TranslationType.RECEIVING);
@@ -54,7 +54,6 @@ public class TranslationConfigurationService {
 		this.translationConfigurationRepository.save(configReceiving);
 
 		TranslationConfigurationModel configSending = new TranslationConfigurationModel();
-
 		configSending.setConversation(optConv.get());
 		configSending.setUser(optUser.get());
 		configSending.setType(TranslationType.SENDING);
@@ -62,5 +61,13 @@ public class TranslationConfigurationService {
 		configSending.setIsActive(dto.getIsSendingTranslation());
 
 		this.translationConfigurationRepository.save(configSending);
+
+		TranslationConfigResponseDTO config = new TranslationConfigResponseDTO();
+		dto.setIsSendingTranslation(dto.getIsSendingTranslation());
+		dto.setIsReceivingTranslation(dto.getIsReceivingTranslation());
+		dto.setSendingTranslation(dto.getSendingTranslation());
+		dto.setReceivingTranslation(dto.getReceivingTranslation());
+
+		return config;
 	}
 }
