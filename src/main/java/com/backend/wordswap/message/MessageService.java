@@ -4,79 +4,126 @@ import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
+import com.backend.wordswap.gemini.GeminiAPIService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
+import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
+import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
+import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Optional;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import java.util.Objects;
 
 @Service
 @Transactional
 public class MessageService {
 
-	private final MessageRepository messageRepository;
-
-	private final UserRepository userRepository;
-
+	private final GeminiAPIService geminiAPIService;
 	private final ConversationService conversationService;
 
+	private final UserRepository userRepository;
+	private final MessageRepository messageRepository;
+	private final TranslationConfigurationRepository translationConfigRepository;
+
 	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
-			ConversationService conversationService) {
+			ConversationService conversationService, GeminiAPIService geminiAPIService,
+			TranslationConfigurationRepository translationConfigRepository) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
+		this.geminiAPIService = geminiAPIService;
+		this.translationConfigRepository = translationConfigRepository;
 	}
 
-	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
 		ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-		String content = Encrypt.encrypt(dto.getContent());
+		TranslationModel translation = this.processContent(dto);
 
-		this.messageRepository.save(new MessageModel(content, sender, conversation));
+		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
 
 		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
 	}
 
-	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
+		List<TranslationConfigurationModel> configs = this.translationConfigRepository
+				.findAllByConversationId(dto.getConversationId());
 
-		Optional<MessageModel> optMessage = this.messageRepository.findById(dto.getId());
-		if (optMessage.isPresent()) {
-			optMessage.get().setContent(Encrypt.encrypt(dto.getContent()));
-			optMessage.get().setIsEdited(Boolean.TRUE);
+		TranslationModel translation = new TranslationModel();
+		String content = dto.getContent();
 
-			this.messageRepository.save(optMessage.get());
+		List<TranslationConfigurationModel> senderConfigs = configs.stream()
+				.filter(f -> dto.getSenderId().compareTo(f.getUser().getId()) == 0).toList();
 
-			return this.conversationService.findAllConversationByUserId(optMessage.get().getSender().getId());
+		if (!CollectionUtils.isEmpty(senderConfigs)) {
+			TranslationConfigurationModel configSender = this.getTranslation(senderConfigs, TranslationType.SENDING);
+			if (Objects.nonNull(configSender)) {
+				translation.setLanguageCodeSending(configSender.getTargetLanguage());
+
+				String contentTranslated = this.geminiAPIService.translateText(content, configSender.getTargetLanguage());
+				translation.setContentSending(contentTranslated);
+			}
 		}
 
-		throw new RuntimeException("Message not found.");
+		List<TranslationConfigurationModel> receiverConfigs = configs.stream()
+				.filter(f -> dto.getReceiverId().compareTo(f.getUser().getId()) == 0).toList();
+
+		if (!CollectionUtils.isEmpty(receiverConfigs)) {
+			TranslationConfigurationModel configReceiver = this.getTranslation(receiverConfigs, TranslationType.RECEIVING);
+			if (Objects.nonNull(configReceiver)) {
+				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
+
+				String contentTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
+				translation.setContentReceiver(contentTranslated);
+			}
+		}
+
+		return translation;
+	}
+
+	private TranslationConfigurationModel getTranslation(List<TranslationConfigurationModel> senderConfigs,
+			TranslationType type) {
+		return senderConfigs.stream().filter(f -> type.equals(f.getType()) && f.getIsActive()).findFirst().orElse(null);
+	}
+
+	private void saveMessage(String content, UserModel sender, ConversationModel conversation, TranslationModel translation) {
+		MessageModel message = new MessageModel(content, sender, conversation);
+		if (Objects.nonNull(translation)) {
+			message.setTranslation(translation);
+		}
+
+		this.messageRepository.save(message);
+	}
+
+	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws Exception {
+		MessageModel message = this.messageRepository.findById(dto.getId())
+				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
+
+		message.setContent(Encrypt.encrypt(dto.getContent()));
+		message.setIsEdited(Boolean.TRUE);
+
+		this.messageRepository.save(message);
+
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
 	}
 
 	public List<ConversationResponseDTO> deleteMessage(MessageDeleteDTO dto) {
-		Optional<MessageModel> optMessage = this.messageRepository.findById(dto.id());
-		if (optMessage.isPresent()) {
-			optMessage.get().setIsDeleted(Boolean.TRUE);
+		MessageModel message = this.messageRepository.findById(dto.id())
+				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
 
-			this.messageRepository.save(optMessage.get());
+		message.setIsDeleted(Boolean.TRUE);
 
-			return this.conversationService.findAllConversationByUserId(optMessage.get().getSender().getId());
-		}
+		this.messageRepository.save(message);
 
-		throw new RuntimeException("Message not found.");
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
 	}
 }

@@ -2,6 +2,7 @@ package com.backend.wordswap.conversation.entity;
 
 import com.backend.wordswap.generic.entity.GenericModel;
 import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.user.entity.UserModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,9 @@ public class ConversationModel extends GenericModel {
 	@OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<MessageModel> messages = new ArrayList<>();
 
+	@OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<TranslationConfigurationModel> translationConfigurations = new ArrayList<>();
+
 	@Column(name = "created_date")
 	private LocalDate createdDate;
 
@@ -41,4 +45,15 @@ public class ConversationModel extends GenericModel {
 	@Column(name = "is_deleted_recipient")
 	private Boolean isDeletedRecipient;
 
+	@Transient
+	public TranslationConfigurationModel getTranslationByUserId(Long userId) {
+		return translationConfigurations.stream().filter(
+				translationConfigurationModel -> translationConfigurationModel.getUser().getId().compareTo(userId) == 0)
+				.findFirst().orElse(null);
+	}
+	
+	@Transient
+	public List<MessageModel> getMessages() {
+		return this.messages;
+	}
 }

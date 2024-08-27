@@ -1,12 +1,6 @@
 package com.backend.wordswap.websocket;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -24,7 +18,7 @@ import com.backend.wordswap.message.dto.MessageEditDTO;
 public class WebSocketController {
 
 	private final MessageService messageService;
-	
+
 	public WebSocketController(MessageService messageService) {
 		this.messageService = messageService;
 	}
@@ -32,16 +26,14 @@ public class WebSocketController {
 	@MessageMapping("/chat/{roomId}")
 	@SendTo("/topic/messages/{roomId}")
 	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId,
-			@RequestBody MessageCreateDTO dto) throws InvalidKeyException, NoSuchAlgorithmException,
-			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+			@RequestBody MessageCreateDTO dto) throws Exception {
 		return this.messageService.sendMessage(dto);
 	}
 
 	@SendTo("/topic/messages/{roomId}")
 	@MessageMapping("/chat/edit/{roomId}")
 	public List<ConversationResponseDTO> editMessage(@DestinationVariable String roomId,
-			@RequestBody MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException,
-			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+			@RequestBody MessageEditDTO dto) throws Exception {
 		return this.messageService.editMessage(dto);
 	}
 

@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,9 +19,13 @@ public class ConversationResponseDTO {
 
 	private Long senderId;
 
+	private Long receiverId;
+
 	private String conversationName;
 
 	private String profilePic;
+
+	private Map<Long, TranslationConfigResponseDTO> configsUser;
 
 	private Map<LocalDateTime, String> lastMessage;
 

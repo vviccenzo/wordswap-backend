@@ -24,7 +24,7 @@ public class ConversationService {
 
 	private ConversationRepository conversationRepository;
 
-	ConversationService(UserRepository userRepository, ConversationRepository conversationRepository) {
+	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository) {
 		this.userRepository = userRepository;
 		this.conversationRepository = conversationRepository;
 	}
