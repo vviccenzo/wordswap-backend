@@ -37,6 +37,9 @@ jobs:
         - name: Pull image from docker hub
           run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/wordswap:latest
 
+        - name: Remove docker container
+          run: docker rm -f wordswap
+
         - name: Run docker container
           run: sudo docker run -d -p 8080:8080 -e DATABASE_USERNAME=${{secrets.DATABASE_USERNAME}} -e DATABASE_PASSWORD='${{secrets.DATABASE_PASSWORD}}' -e DATABASE_URL=${{secrets.DATABASE_URL}} --name wordswap ${{ secrets.DOCKER_USERNAME }}/wordswap:latest
       
