@@ -9,17 +9,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MessageCreateDTO {
 
-    private Long senderId;
+	private Long senderId;
 
-    private Long receiverId;
+	private Long receiverId;
 
-    private Long conversationId = 0L;
+	private Long conversationId = 0L;
 
-    private String content;
+	private Long scrollPage;
 
-    public MessageCreateDTO(Long senderId, String content, Long receiverId) {
-    	this.senderId = senderId;
-    	this.content = content;
-    	this.receiverId = receiverId;
-    }
+	private String content;
+
+	public MessageCreateDTO(Long senderId, String content, Long receiverId) {
+		this.senderId = senderId;
+		this.content = content;
+		this.receiverId = receiverId;
+	}
 }

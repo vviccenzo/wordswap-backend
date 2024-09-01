@@ -8,12 +8,14 @@ import com.backend.wordswap.message.dto.MessageContent;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
+import com.backend.wordswap.translation.entity.TranslationModel;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,7 @@ import javax.crypto.NoSuchPaddingException;
 
 public class ConversationFactory {
 
-	public ConversationResponseDTO buildMessages(Long userId, ConversationModel conv) {
+	public ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conv.getId());
 		dto.setSenderId(conv.getUserInitiator().getId());
@@ -44,8 +46,8 @@ public class ConversationFactory {
 		dto.setProfilePic(this.getProfilePic(conv, isInitiator));
 		dto.setConversationName(this.getConversationName(conv, isInitiator));
 
-		List<MessageRecord> userMessages = this.getDecryptedMessages(conv, userId, true);
-		List<MessageRecord> targetUserMessages = this.getDecryptedMessages(conv, userId, false);
+		List<MessageRecord> userMessages = this.getDecryptedMessages(conv, userId, true, messageByConversation);
+		List<MessageRecord> targetUserMessages = this.getDecryptedMessages(conv, userId, false, messageByConversation);
 
 		dto.setConfigsUser(configsUser);
 		dto.setUserMessages(userMessages);
@@ -73,14 +75,12 @@ public class ConversationFactory {
 	}
 
 	private String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
-	    return conversation.getTranslationConfigurations().stream()
-	        .filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
-	        .map(trans -> {
-	            String[] parts = trans.getTargetLanguage().split(" - ");
-	            return parts.length > 1 ? parts[1] : "";
-	        })
-	        .findFirst()
-	        .orElse("");
+		return conversation.getTranslationConfigurations().stream()
+				.filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
+				.map(trans -> {
+					String[] parts = trans.getTargetLanguage().split(" - ");
+					return parts.length > 1 ? parts[1] : "";
+				}).findFirst().orElse("");
 	}
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
@@ -109,8 +109,9 @@ public class ConversationFactory {
 		return isInitiator ? conv.getUserRecipient().getName() : conv.getUserInitiator().getName();
 	}
 
-	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages) {
-		List<MessageModel> messages = conv.getMessages();
+	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages,
+			Map<Long, List<MessageModel>> messageByConversation) {
+		List<MessageModel> messages = messageByConversation.getOrDefault(conv.getId(), new ArrayList<>());
 		List<MessageRecord> decryptedMessages = new ArrayList<>();
 
 		for (MessageModel message : messages) {
@@ -123,22 +124,34 @@ public class ConversationFactory {
 	}
 
 	private MessageRecord decryptMessage(MessageModel msg) {
-		try {
-			return MessageRecord.builder().id(msg.getId()).content(Encrypt.decrypt(msg.getContent()))
-					.sender(msg.getSender().getUsername()).timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
-					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
-					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
-					.messageContent(new MessageContent(Encrypt.decrypt(msg.getContent()),
-							Objects.nonNull(msg.getTranslation()) ? msg.getTranslation().getContentSending()
-									: Encrypt.decrypt(msg.getContent()),
-							Objects.nonNull(msg.getTranslation()) ? msg.getTranslation().getContentReceiver()
-									: Encrypt.decrypt(msg.getContent())))
-					.build();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
-			throw new RuntimeException(e);
-		}
+	    try {
+	        String decryptedContent = Encrypt.decrypt(msg.getContent());
+
+	        String contentSending = Optional.ofNullable(msg.getTranslation())
+	                                        .map(TranslationModel::getContentSending)
+	                                        .orElse(decryptedContent);
+
+	        String contentReceiver = Optional.ofNullable(msg.getTranslation())
+	                                         .map(TranslationModel::getContentReceiver)
+	                                         .orElse(decryptedContent);
+
+	        MessageContent messageContent = new MessageContent(decryptedContent, contentSending, contentReceiver);
+
+	        return MessageRecord.builder()
+	                            .id(msg.getId())
+	                            .content(decryptedContent)
+	                            .sender(msg.getSender().getUsername())
+	                            .timeStamp(msg.getSentAt())
+	                            .senderId(msg.getSender().getId())
+	                            .isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
+	                            .isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
+	                            .messageContent(messageContent)
+	                            .build();
+	    } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+	        throw new RuntimeException(e);
+	    }
 	}
+
 
 	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {
 		Map.Entry<LocalDateTime, String> lastUserMessage = getLastMessageEntry(user);
@@ -165,7 +178,9 @@ public class ConversationFactory {
 	}
 
 	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> msg) {
-		return msg.stream().reduce((first, second) -> second)
-				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
+	    return msg.stream()
+	              .max(Comparator.comparing(MessageRecord::getTimeStamp))
+	              .map(message -> Map.entry(message.getTimeStamp(), message.getContent()))
+	              .orElse(null);
 	}
 }
