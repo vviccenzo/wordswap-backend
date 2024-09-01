@@ -18,6 +18,7 @@ import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 
@@ -30,9 +31,12 @@ class MessageServiceTest {
 
 	@Mock
 	private ConversationService conversationService;
-
+ 
 	@Mock
 	private UserRepository userRepository;
+	
+	@Mock
+	private TranslationConfigurationRepository translationConfigRepository;
 
 	@InjectMocks
 	private MessageService messageService;

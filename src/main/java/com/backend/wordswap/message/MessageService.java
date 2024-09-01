@@ -1,13 +1,16 @@
 package com.backend.wordswap.message;
 
+import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.conversation.dto.MessageRecord;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.gemini.GeminiAPIService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
+import com.backend.wordswap.message.dto.MessageRequestDTO;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
@@ -22,6 +25,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -30,18 +34,20 @@ public class MessageService {
 	private final GeminiAPIService geminiAPIService;
 	private final ConversationService conversationService;
 
+	private final ConversationRepository conversationRepository;
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
 	private final TranslationConfigurationRepository translationConfigRepository;
 
 	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
 			ConversationService conversationService, GeminiAPIService geminiAPIService,
-			TranslationConfigurationRepository translationConfigRepository) {
+			TranslationConfigurationRepository translationConfigRepository, ConversationRepository conversationRepository) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
 		this.geminiAPIService = geminiAPIService;
 		this.translationConfigRepository = translationConfigRepository;
+		this.conversationRepository = conversationRepository;
 	}
 
 	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
@@ -66,7 +72,7 @@ public class MessageService {
 
 		if (!CollectionUtils.isEmpty(senderConfigs)) {
 			TranslationConfigurationModel configSender = this.getTranslation(senderConfigs, TranslationType.SENDING);
-			if (Objects.nonNull(configSender)) {
+			if (Objects.nonNull(configSender) && configSender.getIsActive().booleanValue()) {
 				translation.setLanguageCodeSending(configSender.getTargetLanguage());
 
 				String contentTranslated = this.geminiAPIService.translateText(content, configSender.getTargetLanguage());
@@ -79,7 +85,7 @@ public class MessageService {
 
 		if (!CollectionUtils.isEmpty(receiverConfigs)) {
 			TranslationConfigurationModel configReceiver = this.getTranslation(receiverConfigs, TranslationType.RECEIVING);
-			if (Objects.nonNull(configReceiver)) {
+			if (Objects.nonNull(configReceiver) && configReceiver.getIsActive().booleanValue()) {
 				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
 
 				String contentTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
@@ -125,5 +131,14 @@ public class MessageService {
 		this.messageRepository.save(message);
 
 		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
+	}
+
+	public List<MessageRecord> getMessages(MessageRequestDTO dto) {
+		Optional<ConversationModel> optConv = this.conversationRepository.findById(dto.getConversationId());
+		if(optConv.isPresent()) {
+			
+		}
+
+		throw new EntityNotFoundException("Conversation not founded. ID: " + dto.getConversationId());
 	}
 }

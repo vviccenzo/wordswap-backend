@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,9 +22,11 @@ import org.mockito.MockitoAnnotations;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.message.MessageRepository;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -38,6 +41,9 @@ class ConversationServiceTest {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private MessageRepository messageRepository;
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
@@ -49,14 +55,36 @@ class ConversationServiceTest {
 		UserModel user = new UserModel();
 		user.setId(userId);
 
+		UserProfileModel profilePic = new UserProfileModel();
+		profilePic.setUser(user);
+		profilePic.setContent(new byte[]{1, 2, 3});
+		profilePic.setFileName("profile.jpg");
+		profilePic.setUpdateDate(LocalDate.now());
+
+		user.setUserProfile(profilePic);
+		
+		Long userId2 = 1L;
+		UserModel user2 = new UserModel();
+		user2.setId(userId2);
+		
+		UserProfileModel profilePic2 = new UserProfileModel();
+		profilePic2.setUser(user);
+		profilePic2.setContent(new byte[]{1, 2, 3});
+		profilePic2.setFileName("profile.jpg");
+		profilePic2.setUpdateDate(LocalDate.now());
+
+		user2.setUserProfile(profilePic2);
+
 		ConversationModel conversation1 = new ConversationModel();
 		conversation1.setId(1L);
 		conversation1.setUserInitiator(user);
+		conversation1.setUserRecipient(user2);
 		conversation1.setIsDeletedInitiator(false);
 
 		ConversationModel conversation2 = new ConversationModel();
 		conversation2.setId(2L);
-		conversation2.setUserRecipient(user);
+		conversation2.setUserInitiator(user);
+		conversation2.setUserRecipient(user2);
 		conversation2.setIsDeletedRecipient(false);
 
 		user.setInitiatedConversations(List.of(conversation1));
