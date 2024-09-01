@@ -29,3 +29,13 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/wordswap
+
+  deploy:
+      needs: build
+      runs-on: self-hosted
+      steps:
+        - name: Pull image from docker hub
+          run: docker pull ${{ secrets.DOCKER_USERNAME }}/wordswap:latest
+        - name: Run docker container
+          run: docker run -d -p 8080:8080 --name wordswap ${{ secrets.DOCKER_USERNAME }}/wordswap:latest
+      
