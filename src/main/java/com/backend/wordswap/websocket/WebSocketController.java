@@ -25,22 +25,19 @@ public class WebSocketController {
 
 	@MessageMapping("/chat/{roomId}")
 	@SendTo("/topic/messages/{roomId}")
-	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId,
-			@RequestBody MessageCreateDTO dto) throws Exception {
+	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId, @RequestBody MessageCreateDTO dto) throws Exception {
 		return this.messageService.sendMessage(dto);
 	}
 
 	@SendTo("/topic/messages/{roomId}")
 	@MessageMapping("/chat/edit/{roomId}")
-	public List<ConversationResponseDTO> editMessage(@DestinationVariable String roomId,
-			@RequestBody MessageEditDTO dto) throws Exception {
+	public List<ConversationResponseDTO> editMessage(@DestinationVariable String roomId, @RequestBody MessageEditDTO dto) throws Exception {
 		return this.messageService.editMessage(dto);
 	}
 
 	@SendTo("/topic/messages/{roomId}")
 	@MessageMapping("/chat/delete/{roomId}")
-	public List<ConversationResponseDTO> deleteMessage(@DestinationVariable String roomId,
-			@RequestBody MessageDeleteDTO dto) {
+	public List<ConversationResponseDTO> deleteMessage(@DestinationVariable String roomId, @RequestBody MessageDeleteDTO dto) {
 		return this.messageService.deleteMessage(dto);
 	}
 

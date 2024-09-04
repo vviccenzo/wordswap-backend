@@ -9,4 +9,6 @@ public class MessageRequestDTO {
 
 	private Long conversationId;
 
+	private int pageNumber;
+
 }

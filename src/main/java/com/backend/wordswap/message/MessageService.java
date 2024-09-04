@@ -1,9 +1,7 @@
 package com.backend.wordswap.message;
 
-import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.conversation.dto.MessageRecord;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.gemini.GeminiAPIService;
@@ -34,20 +32,19 @@ public class MessageService {
 	private final GeminiAPIService geminiAPIService;
 	private final ConversationService conversationService;
 
-	private final ConversationRepository conversationRepository;
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
 	private final TranslationConfigurationRepository translationConfigRepository;
 
-	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
+	public MessageService(MessageRepository messageRepository, UserRepository userRepository, 
 			ConversationService conversationService, GeminiAPIService geminiAPIService,
-			TranslationConfigurationRepository translationConfigRepository, ConversationRepository conversationRepository) {
+			TranslationConfigurationRepository translationConfigRepository
+	) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
 		this.geminiAPIService = geminiAPIService;
 		this.translationConfigRepository = translationConfigRepository;
-		this.conversationRepository = conversationRepository;
 	}
 
 	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
@@ -57,7 +54,7 @@ public class MessageService {
 
 		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
 
-		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
+		return this.conversationService.findAllConversationByUserId(dto.getSenderId(), dto.getPageNumber());
 	}
 
 	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
@@ -96,8 +93,7 @@ public class MessageService {
 		return translation;
 	}
 
-	private TranslationConfigurationModel getTranslation(List<TranslationConfigurationModel> senderConfigs,
-			TranslationType type) {
+	private TranslationConfigurationModel getTranslation(List<TranslationConfigurationModel> senderConfigs, TranslationType type) {
 		return senderConfigs.stream().filter(f -> type.equals(f.getType()) && f.getIsActive()).findFirst().orElse(null);
 	}
 
@@ -110,35 +106,34 @@ public class MessageService {
 		this.messageRepository.save(message);
 	}
 
+	@Transactional
 	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws Exception {
-		MessageModel message = this.messageRepository.findById(dto.getId())
-				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
-
+		MessageModel message = this.messageRepository.findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException("Message not found."));
 		message.setContent(Encrypt.encrypt(dto.getContent()));
 		message.setIsEdited(Boolean.TRUE);
 
 		this.messageRepository.save(message);
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId(), dto.getPageNumber());
 	}
 
+	@Transactional
 	public List<ConversationResponseDTO> deleteMessage(MessageDeleteDTO dto) {
-		MessageModel message = this.messageRepository.findById(dto.id())
-				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
-
+		MessageModel message = this.messageRepository.findById(dto.id()).orElseThrow(() -> new EntityNotFoundException("Message not found."));
 		message.setIsDeleted(Boolean.TRUE);
 
 		this.messageRepository.save(message);
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId(), 0);
 	}
 
-	public List<MessageRecord> getMessages(MessageRequestDTO dto) {
-		Optional<ConversationModel> optConv = this.conversationRepository.findById(dto.getConversationId());
-		if(optConv.isPresent()) {
-			
+	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {
+		List<ConversationResponseDTO> conversations = this.conversationService.findAllConversationByUserId(dto.getUserId(), dto.getPageNumber());
+		Optional<ConversationResponseDTO> conv = conversations.stream().filter(f -> f.getId().compareTo(dto.getConversationId()) == 0).findFirst();
+		if(conv.isPresent()) {
+			return conv.get();
 		}
-
-		throw new EntityNotFoundException("Conversation not founded. ID: " + dto.getConversationId());
+		
+		throw new EntityNotFoundException("Conversation not founded");
 	}
 }

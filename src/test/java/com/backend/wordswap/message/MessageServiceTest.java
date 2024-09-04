@@ -55,14 +55,14 @@ class MessageServiceTest {
 		when(conversationService.getOrCreateConversation(dto)).thenReturn(conversationModel);
 		when(userRepository.findById(dto.getSenderId())).thenReturn(Optional.of(userModel));
 		when(messageRepository.save(any(MessageModel.class))).thenReturn(null);
-		when(conversationService.findAllConversationByUserId(dto.getSenderId()))
+		when(conversationService.findAllConversationByUserId(dto.getSenderId(), 0))
 				.thenReturn(List.of(new ConversationResponseDTO()));
 
 		List<ConversationResponseDTO> result = messageService.sendMessage(dto);
 
 		assertNotNull(result);
 		verify(messageRepository, times(1)).save(any(MessageModel.class));
-		verify(conversationService, times(1)).findAllConversationByUserId(dto.getSenderId());
+		verify(conversationService, times(1)).findAllConversationByUserId(dto.getSenderId(), 0);
 	}
 
 	@Test
@@ -78,27 +78,27 @@ class MessageServiceTest {
 
 	@Test
 	void testEditMessage() throws Exception {
-		MessageEditDTO dto = new MessageEditDTO(1L, "Updated Message");
+		MessageEditDTO dto = new MessageEditDTO(1L, "Updated Message", 0);
 		MessageModel messageModel = new MessageModel();
 		UserModel userModel = new UserModel();
 		messageModel.setSender(userModel);
 
 		when(messageRepository.findById(dto.getId())).thenReturn(Optional.of(messageModel));
 		when(messageRepository.save(any(MessageModel.class))).thenReturn(null);
-		when(conversationService.findAllConversationByUserId(userModel.getId()))
+		when(conversationService.findAllConversationByUserId(userModel.getId(), 0))
 				.thenReturn(List.of(new ConversationResponseDTO()));
 
 		List<ConversationResponseDTO> result = messageService.editMessage(dto);
 
 		assertNotNull(result);
 		verify(messageRepository, times(1)).save(any(MessageModel.class));
-		verify(conversationService, times(1)).findAllConversationByUserId(userModel.getId());
+		verify(conversationService, times(1)).findAllConversationByUserId(userModel.getId(), 0);
 		assertTrue(messageModel.getIsEdited());
 	}
 
 	@Test
 	void testEditMessage_MessageNotFound() {
-		MessageEditDTO dto = new MessageEditDTO(1L, "Updated Message");
+		MessageEditDTO dto = new MessageEditDTO(1L, "Updated Message", 0);
 
 		when(messageRepository.findById(dto.getId())).thenReturn(Optional.empty());
 

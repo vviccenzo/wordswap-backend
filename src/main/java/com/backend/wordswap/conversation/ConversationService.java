@@ -18,12 +18,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ConversationService {
@@ -34,46 +34,36 @@ public class ConversationService {
 
 	private MessageRepository messageRepository;
 
-	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository,
-			MessageRepository messageRepository) {
+	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository, MessageRepository messageRepository) {
 		this.userRepository = userRepository;
 		this.conversationRepository = conversationRepository;
 		this.messageRepository = messageRepository;
 	}
 
-	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId) {
-		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
-		ConversationFactory conversationFactory = new ConversationFactory();
+	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId, int pageNumber) {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
 
-		Set<Long> conversationsId = user.getInitiatedConversations().stream().map(ConversationModel::getId)
-				.collect(Collectors.toSet());
+		Set<Long> conversationsId = user.getInitiatedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet());
+		conversationsId.addAll(user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
 
-		conversationsId.addAll(
-				user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
-
-		Pageable pageable = PageRequest.of(0, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
+		Pageable pageable = PageRequest.of(pageNumber, 50, Sort.by(Sort.Direction.DESC, "sentAt"));
 
 		Map<Long, List<MessageModel>> messageByConversation = this.messageRepository
 				.findAllByConversationIdIn(conversationsId, pageable).stream()
 				.collect(Collectors.groupingBy(msg -> msg.getConversation().getId()));
 
-		user.getInitiatedConversations().stream().filter(f -> !f.getIsDeletedInitiator())
-				.forEach(conversationModel -> conversationResponseDTOS
-						.add(conversationFactory.buildMessages(userId, conversationModel, messageByConversation)));
-
-		user.getReceivedConversations().stream().filter(f -> !f.getIsDeletedRecipient())
-				.forEach(conversationModel -> conversationResponseDTOS
-						.add(conversationFactory.buildMessages(userId, conversationModel, messageByConversation)));
-
-		return conversationResponseDTOS;
+		return Stream
+				.concat(user.getInitiatedConversations().stream().filter(f -> !f.getIsDeletedInitiator()),
+						user.getReceivedConversations().stream().filter(f -> !f.getIsDeletedRecipient()))
+				.map(conversationModel -> ConversationFactory.buildMessages(userId, conversationModel,
+						messageByConversation))
+				.toList();
 	}
 
 	@Transactional
 	public ConversationModel createNewConversation(MessageCreateDTO dto) {
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-		UserModel receiver = this.userRepository.findById(dto.getReceiverId())
-				.orElseThrow(EntityNotFoundException::new);
+		UserModel receiver = this.userRepository.findById(dto.getReceiverId()).orElseThrow(EntityNotFoundException::new);
 
 		ConversationModel conversation = new ConversationModel();
 		conversation.setCreatedDate(LocalDate.now());

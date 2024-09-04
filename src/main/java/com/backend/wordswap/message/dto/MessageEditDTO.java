@@ -10,5 +10,7 @@ public class MessageEditDTO {
 	private Long id;
 
 	private String content;
+	
+	private int pageNumber;
 
 }

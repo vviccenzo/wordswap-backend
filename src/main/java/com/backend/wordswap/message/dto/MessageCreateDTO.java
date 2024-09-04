@@ -15,7 +15,7 @@ public class MessageCreateDTO {
 
 	private Long conversationId = 0L;
 
-	private Long scrollPage;
+	private int pageNumber;
 
 	private String content;
 

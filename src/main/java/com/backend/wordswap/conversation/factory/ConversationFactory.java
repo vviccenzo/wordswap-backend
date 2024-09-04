@@ -10,6 +10,8 @@ import com.backend.wordswap.translation.configuration.dto.TranslationConfigRespo
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 import com.backend.wordswap.translation.entity.TranslationModel;
 
+import lombok.experimental.UtilityClass;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -26,9 +28,10 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+@UtilityClass
 public class ConversationFactory {
 
-	public ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
+	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conv.getId());
 		dto.setSenderId(conv.getUserInitiator().getId());
@@ -40,19 +43,19 @@ public class ConversationFactory {
 		Long userRecipient = conv.getUserRecipient().getId();
 
 		Map<Long, TranslationConfigResponseDTO> configsUser = new HashMap<>();
-		configsUser.put(userInitiator, this.buildTranslationConfig(userInitiator, conv));
-		configsUser.put(userRecipient, this.buildTranslationConfig(userRecipient, conv));
+		configsUser.put(userInitiator, buildTranslationConfig(userInitiator, conv));
+		configsUser.put(userRecipient, buildTranslationConfig(userRecipient, conv));
 
-		dto.setProfilePic(this.getProfilePic(conv, isInitiator));
-		dto.setConversationName(this.getConversationName(conv, isInitiator));
+		dto.setProfilePic(getProfilePic(conv, isInitiator));
+		dto.setConversationName(getConversationName(conv, isInitiator));
 
-		List<MessageRecord> userMessages = this.getDecryptedMessages(conv, userId, true, messageByConversation);
-		List<MessageRecord> targetUserMessages = this.getDecryptedMessages(conv, userId, false, messageByConversation);
+		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
+		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
 
 		dto.setConfigsUser(configsUser);
 		dto.setUserMessages(userMessages);
 		dto.setTargetUserMessages(targetUserMessages);
-		dto.setLastMessage(this.determineLastMessage(userMessages, targetUserMessages));
+		dto.setLastMessage(determineLastMessage(userMessages, targetUserMessages));
 
 		return dto;
 	}
@@ -60,10 +63,10 @@ public class ConversationFactory {
 	private TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
 		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
 
-		dto.setSendingTranslation(this.getTranslationTarget(conversation, userId, TranslationType.SENDING));
-		dto.setReceivingTranslation(this.getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
-		dto.setIsSendingTranslation(this.isTranslationActive(conversation, userId, TranslationType.SENDING));
-		dto.setIsReceivingTranslation(this.isTranslationActive(conversation, userId, TranslationType.RECEIVING));
+		dto.setSendingTranslation(getTranslationTarget(conversation, userId, TranslationType.SENDING));
+		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsSendingTranslation(isTranslationActive(conversation, userId, TranslationType.SENDING));
+		dto.setIsReceivingTranslation(isTranslationActive(conversation, userId, TranslationType.RECEIVING));
 
 		return dto;
 	}
@@ -86,15 +89,13 @@ public class ConversationFactory {
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
 		if (isInitiator) {
 			if (Objects.nonNull(conversationModel.getUserRecipient())) {
-				return this
-						.convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+				return convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
 			} else {
 				return "";
 			}
 		} else {
 			if (Objects.nonNull(conversationModel.getUserInitiator())) {
-				return this
-						.convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+				return convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
 			} else {
 				return "";
 			}
@@ -116,7 +117,7 @@ public class ConversationFactory {
 
 		for (MessageModel message : messages) {
 			if (message.getSender().getId().equals(userId) == isUserMessages) {
-				decryptedMessages.add(this.decryptMessage(message));
+				decryptedMessages.add(decryptMessage(message));
 			}
 		}
 

@@ -29,7 +29,7 @@ public class ConversationController {
 
 	@GetMapping(path = "/load-conversations", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ConversationResponseDTO> findAllConversationByUserId(@RequestParam("userId") Long userId) {
-		return this.conversationService.findAllConversationByUserId(userId);
+		return this.conversationService.findAllConversationByUserId(userId, 0);
 	}
 
 	@PostMapping(path = "/delete-conversation")

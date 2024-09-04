@@ -2,6 +2,7 @@ package com.backend.wordswap.message;
 
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.dto.MessageRequestDTO;
 
 import java.util.List;
 
@@ -22,6 +23,11 @@ public class MessageController {
 	@PostMapping(path = "/send-message", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public List<ConversationResponseDTO> sendMessage(@RequestBody MessageCreateDTO dto) throws Exception {
 		return this.messageService.sendMessage(dto);
+	}
+
+	@PostMapping(path = "/get-messages")
+	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {
+		return this.getMessages(dto);
 	}
 
 }
