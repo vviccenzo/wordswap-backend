@@ -31,7 +31,7 @@ import javax.crypto.NoSuchPaddingException;
 @UtilityClass
 public class ConversationFactory {
 
-	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
+	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation, Map<Long, Long> totalMessagesByConversation) {
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conv.getId());
 		dto.setSenderId(conv.getUserInitiator().getId());
@@ -48,6 +48,7 @@ public class ConversationFactory {
 
 		dto.setProfilePic(getProfilePic(conv, isInitiator));
 		dto.setConversationName(getConversationName(conv, isInitiator));
+		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
 
 		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
 		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
@@ -63,9 +64,7 @@ public class ConversationFactory {
 	private TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
 		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
 
-		dto.setSendingTranslation(getTranslationTarget(conversation, userId, TranslationType.SENDING));
 		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
-		dto.setIsSendingTranslation(isTranslationActive(conversation, userId, TranslationType.SENDING));
 		dto.setIsReceivingTranslation(isTranslationActive(conversation, userId, TranslationType.RECEIVING));
 
 		return dto;
@@ -120,8 +119,7 @@ public class ConversationFactory {
 		return isInitiator ? conv.getUserRecipient().getName() : conv.getUserInitiator().getName();
 	}
 
-	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages,
-			Map<Long, List<MessageModel>> messageByConversation) {
+	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages, Map<Long, List<MessageModel>> messageByConversation) {
 		List<MessageModel> messages = messageByConversation.getOrDefault(conv.getId(), new ArrayList<>());
 		List<MessageRecord> decryptedMessages = new ArrayList<>();
 
@@ -137,19 +135,17 @@ public class ConversationFactory {
 	private MessageRecord decryptMessage(MessageModel msg) {
 		try {
 			String decryptedContent = Encrypt.decrypt(msg.getContent());
+			String contentReceiver = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentReceiver).orElse(decryptedContent);
+			MessageContent messageContent = new MessageContent(decryptedContent, contentReceiver);
 
-			String contentSending = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentSending)
-					.orElse(decryptedContent);
-
-			String contentReceiver = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentReceiver)
-					.orElse(decryptedContent);
-
-			MessageContent messageContent = new MessageContent(decryptedContent, contentSending, contentReceiver);
-
-			return MessageRecord.builder().id(msg.getId()).content(decryptedContent)
-					.sender(msg.getSender().getUsername()).timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
+			return MessageRecord.builder()
+					.id(msg.getId())
+					.content(decryptedContent)
+					.sender(msg.getSender().getUsername())
+					.timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
 					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
-					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false)).messageContent(messageContent)
+					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
+					.messageContent(messageContent)
 					.build();
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
 				| BadPaddingException e) {

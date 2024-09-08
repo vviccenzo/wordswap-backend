@@ -1,5 +1,7 @@
 package com.backend.wordswap.websocket;
 
+import com.backend.wordswap.friendship.dto.FriendshipRequestUpdateDTO;
+import com.backend.wordswap.friendship.request.dto.FriendshipDeleteRequestDTO;
 import com.backend.wordswap.friendship.request.dto.FriendshipRequestCreateDTO;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
@@ -19,5 +21,9 @@ public class WebSocketRequest {
 	private MessageDeleteDTO messageDeleteDTO;
 
 	private FriendshipRequestCreateDTO friendRequestDTO;
+
+	private FriendshipDeleteRequestDTO friendshipDeleteRequestDTO;
+	
+	private FriendshipRequestUpdateDTO friendshipRequestUpdateDTO;
 
 }

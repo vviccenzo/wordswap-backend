@@ -25,6 +25,8 @@ public class ConversationResponseDTO {
 
 	private String profilePic;
 
+	private int totalMessages;
+
 	private Map<Long, TranslationConfigResponseDTO> configsUser;
 
 	private Map<LocalDateTime, String> lastMessage;

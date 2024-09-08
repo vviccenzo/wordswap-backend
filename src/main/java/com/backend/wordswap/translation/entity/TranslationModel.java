@@ -25,13 +25,6 @@ public class TranslationModel extends GenericModel {
 	@OneToOne(cascade = CascadeType.ALL)
 	private MessageModel message;
 
-	@Column(name = "language_code_sending")
-	private String languageCodeSending;
-
-	@Lob
-	@Column(name = "content_sending_new")
-	private String contentSending;
-
 	@Column(name = "language_code_receiver")
 	private String languageCodeReceiver;
 

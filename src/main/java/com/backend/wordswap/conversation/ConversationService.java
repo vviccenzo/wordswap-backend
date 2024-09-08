@@ -3,6 +3,7 @@ package com.backend.wordswap.conversation;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,18 +43,29 @@ public class ConversationService {
 		this.messageRepository = messageRepository;
 	}
 
-	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId) {
+	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId, Integer pageNumber) {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
 		Set<Long> conversationIds = this.getAllConversationIds(user);
 
-		Pageable pageable = PageRequest.of(0, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
-		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds,
-				pageable);
-
-		List<ConversationResponseDTO> conversationResponseDTOS = this.buildConversationsResponse(user,
-				messageByConversation, userId);
+		Pageable pageable = PageRequest.of(pageNumber, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
+		Map<Long, Long> totalMessagesByConversation = this.getTotalMessagesByConversation(conversationIds);
+		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds, pageable);
+		List<ConversationResponseDTO> conversationResponseDTOS = this.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
 
 		return conversationResponseDTOS;
+	}
+	
+	public Map<Long, Long> getTotalMessagesByConversation(Set<Long> conversationIds) {
+	    List<Object[]> results = this.messageRepository.findTotalMessagesByConversationIds(conversationIds);
+	    Map<Long, Long> totalMessagesByConversation = new HashMap<>();
+	    
+	    for (Object[] result : results) {
+	        Long conversationId = (Long) result[0];
+	        Long messageCount = (Long) result[1];
+	        totalMessagesByConversation.put(conversationId, messageCount);
+	    }
+	    
+	    return totalMessagesByConversation;
 	}
 
 	private Set<Long> getAllConversationIds(UserModel user) {
@@ -67,19 +79,24 @@ public class ConversationService {
 	}
 
 	private Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
-		return this.messageRepository.findAllByConversationIdIn(conversationIds, pageable).stream()
-				.collect(Collectors.groupingBy(msg -> msg.getConversation().getId()));
+		Map<Long, List<MessageModel>> messageGrouped = new HashMap<>();
+		
+		conversationIds.forEach(convId -> {
+			messageGrouped.put(convId, this.messageRepository.findAllByConversationId(convId, pageable));
+		});
+		
+		return messageGrouped;
 	}
 
-	private List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId) {
+	private List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId, Map<Long, Long> totalMessagesByConversation) {
 		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
 		user.getInitiatedConversations().stream().filter(conversation -> !conversation.getIsDeletedInitiator())
 				.forEach(conversation -> conversationResponseDTOS
-						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation)));
+						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
 
 		user.getReceivedConversations().stream().filter(conversation -> !conversation.getIsDeletedRecipient())
 				.forEach(conversation -> conversationResponseDTOS
-						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation)));
+						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
 
 	    conversationResponseDTOS.sort((c1, c2) -> {
 	        LocalDateTime lastMessageC1 = c1.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);

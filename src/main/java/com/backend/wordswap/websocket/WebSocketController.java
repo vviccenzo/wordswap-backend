@@ -23,20 +23,26 @@ public class WebSocketController {
 	@MessageMapping("/chat/{roomId}")
 	public void handleWebSocketAction(@DestinationVariable String roomId, @RequestBody WebSocketRequest request) throws Exception {
 		switch (request.getAction()) {
-		case SEND_MESSAGE:
-			this.messageService.sendMessage(request.getMessageCreateDTO());
-			break;
-		case EDIT_MESSAGE:
-			this.messageService.editMessage(request.getMessageEditDTO());
-			break;
-		case DELETE_MESSAGE:
-			this.messageService.deleteMessage(request.getMessageDeleteDTO());
-			break;
-		case SEND_FRIEND_REQUEST:
-			this.friendshipRequestService.sendInvite(request.getFriendRequestDTO(), WebSocketAction.SEND_FRIEND_REQUEST);
-			break;
-		default:
-			throw new IllegalArgumentException("Ação desconhecida: " + request.getAction());
+			case SEND_MESSAGE:
+				this.messageService.sendMessage(request.getMessageCreateDTO());
+				break;
+			case EDIT_MESSAGE:
+				this.messageService.editMessage(request.getMessageEditDTO());
+				break;
+			case DELETE_MESSAGE:
+				this.messageService.deleteMessage(request.getMessageDeleteDTO());
+				break;
+			case SEND_FRIEND_REQUEST:
+				this.friendshipRequestService.sendInvite(request.getFriendRequestDTO(), WebSocketAction.SEND_FRIEND_REQUEST);
+				break;
+			case DELETE_FRIEND:
+				this.friendshipRequestService.deleteFriendship(request.getFriendshipDeleteRequestDTO());
+				break;
+			case UPDATE_FRIEND_REQUEST:
+				this.friendshipRequestService.changeStatus(request.getFriendshipRequestUpdateDTO());
+				break;
+			default:
+				throw new IllegalArgumentException("Ação desconhecida: " + request.getAction());
 		}
 	}
 

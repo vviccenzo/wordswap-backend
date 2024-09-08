@@ -1,9 +1,8 @@
 package com.backend.wordswap.message;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,14 +12,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.backend.wordswap.conversation.ConversationService;
-import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
-import com.backend.wordswap.message.dto.MessageEditDTO;
-import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.user.UserRepository;
-import com.backend.wordswap.user.entity.UserModel;
 
 import jakarta.persistence.EntityNotFoundException;
 

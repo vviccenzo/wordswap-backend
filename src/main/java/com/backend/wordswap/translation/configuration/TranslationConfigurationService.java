@@ -55,15 +55,6 @@ public class TranslationConfigurationService {
 
 		this.translationConfigurationRepository.save(configReceiving);
 
-		TranslationConfigurationModel configSending = new TranslationConfigurationModel();
-		configSending.setConversation(optConv.get());
-		configSending.setUser(optUser.get());
-		configSending.setType(TranslationType.SENDING);
-		configSending.setTargetLanguage(dto.getSendingTranslation());
-		configSending.setIsActive(dto.getIsSendingTranslation());
-
-		this.translationConfigurationRepository.save(configSending);
-
 		TranslationConfigResponseDTO config = new TranslationConfigResponseDTO();
 		config.setIsSendingTranslation(dto.getIsSendingTranslation());
 		config.setIsReceivingTranslation(dto.getIsReceivingTranslation());
