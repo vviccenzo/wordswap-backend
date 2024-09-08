@@ -44,7 +44,7 @@ public class UserService {
 	@Transactional
 	public UserDTO update(UserUpdateDTO dto) {
 		UserModel modelToUpdate = this.userRepository.findById(dto.getId()).orElseThrow(() -> new UserNotFoundException("User not found."));
-		UserModel updatedModel = UserFactory.createModelFromDto(dto, modelToUpdate);
+		UserModel updatedModel = UserFactory.updateModelFromDto(dto, modelToUpdate);
 		UserModel savedModel = this.userRepository.save(updatedModel);
 
 		return new UserDTO(savedModel);

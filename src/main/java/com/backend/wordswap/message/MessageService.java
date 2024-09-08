@@ -54,7 +54,7 @@ public class MessageService {
 
 		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
 
-		return this.conversationService.findAllConversationByUserId(dto.getSenderId(), dto.getPageNumber());
+		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
 	}
 
 	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
@@ -114,7 +114,7 @@ public class MessageService {
 
 		this.messageRepository.save(message);
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId(), dto.getPageNumber());
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
 	}
 
 	@Transactional
@@ -124,11 +124,11 @@ public class MessageService {
 
 		this.messageRepository.save(message);
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId(), 0);
+		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
 	}
 
 	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {
-		List<ConversationResponseDTO> conversations = this.conversationService.findAllConversationByUserId(dto.getUserId(), dto.getPageNumber());
+		List<ConversationResponseDTO> conversations = this.conversationService.findAllConversationByUserId(dto.getUserId());
 		Optional<ConversationResponseDTO> conv = conversations.stream().filter(f -> f.getId().compareTo(dto.getConversationId()) == 0).findFirst();
 		if(conv.isPresent()) {
 			return conv.get();

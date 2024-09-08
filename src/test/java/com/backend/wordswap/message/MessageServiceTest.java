@@ -55,14 +55,14 @@ class MessageServiceTest {
 		when(conversationService.getOrCreateConversation(dto)).thenReturn(conversationModel);
 		when(userRepository.findById(dto.getSenderId())).thenReturn(Optional.of(userModel));
 		when(messageRepository.save(any(MessageModel.class))).thenReturn(null);
-		when(conversationService.findAllConversationByUserId(dto.getSenderId(), 0))
+		when(conversationService.findAllConversationByUserId(dto.getSenderId()))
 				.thenReturn(List.of(new ConversationResponseDTO()));
 
 		List<ConversationResponseDTO> result = messageService.sendMessage(dto);
 
 		assertNotNull(result);
 		verify(messageRepository, times(1)).save(any(MessageModel.class));
-		verify(conversationService, times(1)).findAllConversationByUserId(dto.getSenderId(), 0);
+		verify(conversationService, times(1)).findAllConversationByUserId(dto.getSenderId());
 	}
 
 	@Test
@@ -85,14 +85,13 @@ class MessageServiceTest {
 
 		when(messageRepository.findById(dto.getId())).thenReturn(Optional.of(messageModel));
 		when(messageRepository.save(any(MessageModel.class))).thenReturn(null);
-		when(conversationService.findAllConversationByUserId(userModel.getId(), 0))
-				.thenReturn(List.of(new ConversationResponseDTO()));
+		when(conversationService.findAllConversationByUserId(userModel.getId())).thenReturn(List.of(new ConversationResponseDTO()));
 
 		List<ConversationResponseDTO> result = messageService.editMessage(dto);
 
 		assertNotNull(result);
 		verify(messageRepository, times(1)).save(any(MessageModel.class));
-		verify(conversationService, times(1)).findAllConversationByUserId(userModel.getId(), 0);
+		verify(conversationService, times(1)).findAllConversationByUserId(userModel.getId());
 		assertTrue(messageModel.getIsEdited());
 	}
 

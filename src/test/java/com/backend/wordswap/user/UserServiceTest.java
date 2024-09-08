@@ -37,7 +37,7 @@ class UserServiceTest {
 
 	@Test
 	void save_ShouldSaveUser_WhenUserDoesNotExist() throws IOException {
-		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", null);
+		UserCreateDTO dto = new UserCreateDTO("name", "username", "email@example.com", "password", null);
 		UserModel userModel = UserFactory.createModelFromDto(dto);
 
 		when(this.userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
@@ -51,7 +51,7 @@ class UserServiceTest {
 
 	@Test
 	void save_ShouldThrowException_WhenEmailExists() throws IOException {
-		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", null);
+		UserCreateDTO dto = new UserCreateDTO("name", "username", "email@example.com", "password", null);
 
 		when(this.userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(new UserModel()));
 
@@ -62,7 +62,7 @@ class UserServiceTest {
 
 	@Test
 	void save_ShouldThrowException_WhenUsernameExists() throws IOException {
-		UserCreateDTO dto = new UserCreateDTO("username", "email@example.com", "password", null);
+		UserCreateDTO dto = new UserCreateDTO("name", "username", "email@example.com", "password", null);
 
 		when(this.userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
 		when(this.userRepository.findByUsername(dto.getUsername())).thenReturn(Optional.of(new UserModel()));
@@ -86,7 +86,7 @@ class UserServiceTest {
 		UserModel existingUser = new UserModel();
 		existingUser.setId(userId);
 		
-		UserModel userEdited = UserFactory.createModelFromDto(updateDTO, existingUser);
+		UserModel userEdited = UserFactory.updateModelFromDto(updateDTO, existingUser);
 
 		when(this.userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 		when(this.userRepository.save(existingUser)).thenReturn(userEdited);

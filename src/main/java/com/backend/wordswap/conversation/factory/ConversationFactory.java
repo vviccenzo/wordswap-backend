@@ -88,14 +88,24 @@ public class ConversationFactory {
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
 		if (isInitiator) {
-			if (Objects.nonNull(conversationModel.getUserRecipient())) {
-				return convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+			if (Objects.nonNull(conversationModel.getUserRecipient())
+					&& Objects.nonNull(conversationModel.getUserRecipient().getUserProfile())) {
+				if (Objects.nonNull(conversationModel.getUserRecipient().getUserProfile().getContent())) {
+					return convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+				} else {
+					return "";
+				}
 			} else {
 				return "";
 			}
 		} else {
 			if (Objects.nonNull(conversationModel.getUserInitiator())) {
-				return convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+				if (Objects.nonNull(conversationModel.getUserInitiator().getUserProfile())
+						&& Objects.nonNull(conversationModel.getUserInitiator().getUserProfile().getContent())) {
+					return convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+				} else {
+					return "";
+				}
 			} else {
 				return "";
 			}
@@ -125,63 +135,58 @@ public class ConversationFactory {
 	}
 
 	private MessageRecord decryptMessage(MessageModel msg) {
-	    try {
-	        String decryptedContent = Encrypt.decrypt(msg.getContent());
+		try {
+			String decryptedContent = Encrypt.decrypt(msg.getContent());
 
-	        String contentSending = Optional.ofNullable(msg.getTranslation())
-	                                        .map(TranslationModel::getContentSending)
-	                                        .orElse(decryptedContent);
+			String contentSending = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentSending)
+					.orElse(decryptedContent);
 
-	        String contentReceiver = Optional.ofNullable(msg.getTranslation())
-	                                         .map(TranslationModel::getContentReceiver)
-	                                         .orElse(decryptedContent);
+			String contentReceiver = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentReceiver)
+					.orElse(decryptedContent);
 
-	        MessageContent messageContent = new MessageContent(decryptedContent, contentSending, contentReceiver);
+			MessageContent messageContent = new MessageContent(decryptedContent, contentSending, contentReceiver);
 
-	        return MessageRecord.builder()
-	                            .id(msg.getId())
-	                            .content(decryptedContent)
-	                            .sender(msg.getSender().getUsername())
-	                            .timeStamp(msg.getSentAt())
-	                            .senderId(msg.getSender().getId())
-	                            .isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
-	                            .isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
-	                            .messageContent(messageContent)
-	                            .build();
-	    } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-	        throw new RuntimeException(e);
-	    }
+			return MessageRecord.builder().id(msg.getId()).content(decryptedContent)
+					.sender(msg.getSender().getUsername()).timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
+					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
+					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false)).messageContent(messageContent)
+					.build();
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
+			throw new RuntimeException(e);
+		}
 	}
-
 
 	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {
 		Map.Entry<LocalDateTime, String> lastUserMessage = getLastMessageEntry(user);
 		Map.Entry<LocalDateTime, String> lastTargetUserMessage = getLastMessageEntry(target);
 
-		if (lastUserMessage != null && lastTargetUserMessage != null) {
-			LocalDateTime lastMessageKey;
-			String lastMessageContent;
-
-			if (!lastUserMessage.getKey().isBefore(lastTargetUserMessage.getKey())) {
-				lastMessageKey = lastUserMessage.getKey();
-				lastMessageContent = lastUserMessage.getValue();
-			} else {
-				lastMessageKey = lastTargetUserMessage.getKey();
-				lastMessageContent = lastTargetUserMessage.getValue();
-			}
-
-			Map<LocalDateTime, String> lastMessage = new HashMap<>();
-			lastMessage.put(lastMessageKey, lastMessageContent);
-			return lastMessage;
+		if (lastUserMessage == null) {
+			return createLastMessageMap(lastTargetUserMessage);
 		}
 
-		return new HashMap<>();
+		if (lastTargetUserMessage == null) {
+			return createLastMessageMap(lastUserMessage);
+		}
+
+		Map.Entry<LocalDateTime, String> lastMessage = lastUserMessage.getKey().isAfter(lastTargetUserMessage.getKey())
+				? lastUserMessage
+				: lastTargetUserMessage;
+
+		return createLastMessageMap(lastMessage);
+	}
+
+	private static Map<LocalDateTime, String> createLastMessageMap(Map.Entry<LocalDateTime, String> lastMessage) {
+		Map<LocalDateTime, String> messageMap = new HashMap<>();
+		if (lastMessage != null) {
+			messageMap.put(lastMessage.getKey(), lastMessage.getValue());
+		}
+
+		return messageMap;
 	}
 
 	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> msg) {
-	    return msg.stream()
-	              .max(Comparator.comparing(MessageRecord::getTimeStamp))
-	              .map(message -> Map.entry(message.getTimeStamp(), message.getContent()))
-	              .orElse(null);
+		return msg.stream().max(Comparator.comparing(MessageRecord::getTimeStamp))
+				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
 	}
 }

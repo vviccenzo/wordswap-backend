@@ -1,5 +1,13 @@
 package com.backend.wordswap.user.factory;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.user.dto.UserCreateDTO;
@@ -9,32 +17,22 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.entity.UserRole;
 import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
-import io.micrometer.common.util.StringUtils;
 import lombok.experimental.UtilityClass;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-
-import org.springframework.web.multipart.MultipartFile;
 
 @UtilityClass
 public class UserFactory {
 
 	public static UserModel createModelFromDto(UserCreateDTO dto) throws IOException {
 		UserModel model = new UserModel();
-		populateUserModelFromCreateDTO(dto, model);
-		if (dto.getFile() != null && dto.getFile().getBytes().length > 0) {
-			model.setUserProfile(createUserProfile(dto.getFile(), model));
-		}
+		populateUserModel(dto, model);
+
 		return model;
 	}
 
-	public static UserModel createModelFromDto(UserUpdateDTO dto, UserModel model) {
+	public static UserModel updateModelFromDto(UserUpdateDTO dto, UserModel model) {
+
 		try {
-			populateUserModelFromUpdateDTO(dto, model);
+			populateUserModel(dto, model);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -43,54 +41,54 @@ public class UserFactory {
 	}
 
 	public static List<UserDTO> buildList(List<UserModel> users, Long currentUserId) {
-		return users.stream().map(model -> {
-			Long conversationId = model.getInitiatedConversations().stream()
-					.filter(conversation -> conversation.getUserRecipient().getId().equals(currentUserId))
-					.map(ConversationModel::getId).findFirst()
-					.orElseGet(() -> model.getReceivedConversations().stream()
-							.filter(conversation -> conversation.getUserInitiator().getId().equals(currentUserId))
-							.map(ConversationModel::getId).findFirst().orElse(null));
-
-			return new UserDTO(model.getId(), model.getUsername(), model.getCreationDate(), conversationId,
-					getProfilePic(model), getBio(model));
-		}).toList();
+		return users.stream().map(model -> new UserDTO(model.getId(), model.getUsername(), model.getCreationDate(),
+				findConversationId(model, currentUserId), getProfilePic(model), getBio(model))).toList();
 	}
 
-	private String getBio(UserModel user) {
-		return StringUtils.isNotBlank(user.getBio()) ? user.getBio() : "";
+	private static Long findConversationId(UserModel model, Long currentUserId) {
+		return model.getInitiatedConversations().stream()
+				.filter(conversation -> conversation.getUserRecipient().getId().equals(currentUserId))
+				.map(ConversationModel::getId).findFirst()
+				.orElseGet(() -> model.getReceivedConversations().stream()
+						.filter(conversation -> conversation.getUserInitiator().getId().equals(currentUserId))
+						.map(ConversationModel::getId).findFirst().orElse(null));
 	}
 
-	private String getProfilePic(UserModel user) {
-		return convertByteArrayToBase64(user.getUserProfile().getContent());
+	private static String getBio(UserModel user) {
+		return Optional.ofNullable(user.getBio()).orElse("");
 	}
 
-	public String convertByteArrayToBase64(byte[] imageBytes) {
+	private static String getProfilePic(UserModel user) {
+		return Optional.ofNullable(user.getUserProfile()).map(profile -> convertByteArrayToBase64(profile.getContent()))
+				.orElse("");
+	}
+
+	private static String convertByteArrayToBase64(byte[] imageBytes) {
 		return Base64.getEncoder().encodeToString(imageBytes);
 	}
 
-	private static void populateUserModelFromCreateDTO(UserCreateDTO dto, UserModel model) {
-		model.setUsername(dto.getUsername());
-		model.setEmail(dto.getEmail());
-		model.setPassword(BCryptUtil.encryptPassword(dto.getPassword()));
-		model.setCreationDate(LocalDate.now());
-		model.setRole(UserRole.USER);
+	private static void populateUserModel(Object dto, UserModel model) throws IOException {
+		if (dto instanceof UserCreateDTO userCreateDTO) {
+			model.setUsername(userCreateDTO.getUsername());
+			model.setEmail(userCreateDTO.getEmail());
+			model.setPassword(BCryptUtil.encryptPassword(userCreateDTO.getPassword()));
+			model.setCreationDate(LocalDate.now());
+			model.setRole(UserRole.USER);
+			model.setName(userCreateDTO.getName());
+			handleProfilePic(userCreateDTO.getFile(), model);
+		} else if (dto instanceof UserUpdateDTO userUpdateDTO) {
+			model.setName(userUpdateDTO.getName());
+			model.setBio(userUpdateDTO.getBio());
+			handleProfilePic(userUpdateDTO.getFile(), model);
+		}
 	}
 
-	private static void populateUserModelFromUpdateDTO(UserUpdateDTO dto, UserModel model) throws IOException {
-		model.setName(dto.getName());
-		model.setBio(dto.getBio());
-
-		if (Objects.nonNull(dto.getFile()) ) {
-			if(Objects.nonNull(model.getUserProfile())) {
-				model.getUserProfile().setContent(dto.getFile().getBytes());
+	private static void handleProfilePic(MultipartFile file, UserModel model) throws IOException {
+		if (file != null && !file.isEmpty()) {
+			if (model.getUserProfile() != null) {
+				model.getUserProfile().setContent(file.getBytes());
 			} else {
-				UserProfileModel profileModel = new UserProfileModel();
-				profileModel.setContent(dto.getFile().getBytes());
-				profileModel.setFileName(dto.getFile().getOriginalFilename());
-				profileModel.setUpdateDate(LocalDate.now());
-				profileModel.setUser(model);
-
-				model.setUserProfile(profileModel);
+				model.setUserProfile(createUserProfile(file, model));
 			}
 		}
 	}
@@ -98,9 +96,10 @@ public class UserFactory {
 	private static UserProfileModel createUserProfile(MultipartFile file, UserModel user) throws IOException {
 		UserProfileModel profile = new UserProfileModel();
 		profile.setContent(file.getBytes());
-		profile.setFileName(file.getName());
+		profile.setFileName(file.getOriginalFilename());
 		profile.setUpdateDate(LocalDate.now());
 		profile.setUser(user);
+
 		return profile;
 	}
 }

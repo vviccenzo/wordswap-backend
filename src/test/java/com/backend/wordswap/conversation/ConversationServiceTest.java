@@ -92,7 +92,7 @@ class ConversationServiceTest {
 
 		when(this.userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-		List<ConversationResponseDTO> result = this.conversationService.findAllConversationByUserId(userId, 0);
+		List<ConversationResponseDTO> result = this.conversationService.findAllConversationByUserId(userId);
 
 		assertEquals(2, result.size());
 		verify(this.userRepository, times(1)).findById(userId);

@@ -6,7 +6,6 @@ import java.util.Objects;
 
 import com.backend.wordswap.user.entity.UserModel;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,7 +35,12 @@ public class UserDTO {
 	}
 
 	private String getProfilePic(UserModel user) {
-		return Objects.nonNull(user.getUserProfile()) ? this.convertByteArrayToBase64(user.getUserProfile().getContent()) : "";
+		boolean isValid = Objects.nonNull(user.getUserProfile()) && Objects.nonNull(user.getUserProfile().getContent());
+		if (isValid) {
+			this.convertByteArrayToBase64(user.getUserProfile().getContent());
+		}
+
+		return "";
 	}
 
 	public String convertByteArrayToBase64(byte[] imageBytes) {

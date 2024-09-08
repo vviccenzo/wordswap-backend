@@ -40,10 +40,10 @@ public class ConversationModel extends GenericModel {
 	private LocalDate createdDate;
 
 	@Column(name = "is_deleted_initiator")
-	private Boolean isDeletedInitiator;
+	private Boolean isDeletedInitiator = Boolean.FALSE;
 
 	@Column(name = "is_deleted_recipient")
-	private Boolean isDeletedRecipient;
+	private Boolean isDeletedRecipient = Boolean.FALSE;
 
 	@Transient
 	public TranslationConfigurationModel getTranslationByUserId(Long userId) {
