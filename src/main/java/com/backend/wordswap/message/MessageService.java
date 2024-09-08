@@ -1,9 +1,12 @@
 package com.backend.wordswap.message;
 
-import com.backend.wordswap.conversation.ConversationRepository;
+import java.util.List;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.conversation.dto.MessageRecord;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.gemini.GeminiAPIService;
@@ -18,127 +21,116 @@ import com.backend.wordswap.translation.configuration.enumeration.TranslationTyp
 import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.websocket.WebSocketAction;
+import com.backend.wordswap.websocket.WebSocketResponse;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @Transactional
 public class MessageService {
 
-	private final GeminiAPIService geminiAPIService;
-	private final ConversationService conversationService;
-
-	private final ConversationRepository conversationRepository;
-	private final UserRepository userRepository;
-	private final MessageRepository messageRepository;
-	private final TranslationConfigurationRepository translationConfigRepository;
+    private final GeminiAPIService geminiAPIService;
+    private final ConversationService conversationService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final TranslationConfigurationRepository translationConfigRepository;
 
 	public MessageService(MessageRepository messageRepository, UserRepository userRepository,
 			ConversationService conversationService, GeminiAPIService geminiAPIService,
-			TranslationConfigurationRepository translationConfigRepository, ConversationRepository conversationRepository) {
+			TranslationConfigurationRepository translationConfigRepository, SimpMessagingTemplate messagingTemplate) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
 		this.geminiAPIService = geminiAPIService;
 		this.translationConfigRepository = translationConfigRepository;
-		this.conversationRepository = conversationRepository;
+		this.messagingTemplate = messagingTemplate;
 	}
 
-	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
-		ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
-		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-		TranslationModel translation = this.processContent(dto);
+	@Transactional
+    public void sendMessage(MessageCreateDTO dto) throws Exception {
+        ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
+        UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
+        TranslationModel translation = this.processContent(dto);
 
-		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
+        this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
+        this.sendWebSocketUpdate(dto.getSenderId(), dto.getReceiverId());
+    }
 
-		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
+    private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
+        TranslationModel translation = new TranslationModel();
+        String content = dto.getContent();
+
+        List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getReceiverId());
+        if (!receiverConfigs.isEmpty()) {
+            TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
+            if (this.isTranslationActive(configReceiver)) {
+                translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
+                translation.setContentReceiver(this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage()));
+            }
+        }
+
+        return translation;
+    }
+
+	private List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
+		List<TranslationConfigurationModel> configs = this.translationConfigRepository.findAllByConversationId(conversationId);
+		return configs.stream().filter(config -> receiverId.equals(config.getUser().getId())).toList();
 	}
 
-	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
-		List<TranslationConfigurationModel> configs = this.translationConfigRepository
-				.findAllByConversationId(dto.getConversationId());
+    private boolean isTranslationActive(TranslationConfigurationModel configReceiver) {
+        return configReceiver != null && Boolean.TRUE.equals(configReceiver.getIsActive());
+    }
 
-		TranslationModel translation = new TranslationModel();
-		String content = dto.getContent();
-
-		List<TranslationConfigurationModel> senderConfigs = configs.stream()
-				.filter(f -> dto.getSenderId().compareTo(f.getUser().getId()) == 0).toList();
-
-		if (!CollectionUtils.isEmpty(senderConfigs)) {
-			TranslationConfigurationModel configSender = this.getTranslation(senderConfigs, TranslationType.SENDING);
-			if (Objects.nonNull(configSender) && configSender.getIsActive().booleanValue()) {
-				translation.setLanguageCodeSending(configSender.getTargetLanguage());
-
-				String contentTranslated = this.geminiAPIService.translateText(content, configSender.getTargetLanguage());
-				translation.setContentSending(contentTranslated);
-			}
-		}
-
-		List<TranslationConfigurationModel> receiverConfigs = configs.stream()
-				.filter(f -> dto.getReceiverId().compareTo(f.getUser().getId()) == 0).toList();
-
-		if (!CollectionUtils.isEmpty(receiverConfigs)) {
-			TranslationConfigurationModel configReceiver = this.getTranslation(receiverConfigs, TranslationType.RECEIVING);
-			if (Objects.nonNull(configReceiver) && configReceiver.getIsActive().booleanValue()) {
-				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
-
-				String contentTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
-				translation.setContentReceiver(contentTranslated);
-			}
-		}
-
-		return translation;
+	private TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
+		return configs.stream().filter(config -> type.equals(config.getType()) && config.getIsActive()).findFirst()
+				.orElse(null);
 	}
 
-	private TranslationConfigurationModel getTranslation(List<TranslationConfigurationModel> senderConfigs,
-			TranslationType type) {
-		return senderConfigs.stream().filter(f -> type.equals(f.getType()) && f.getIsActive()).findFirst().orElse(null);
-	}
+    private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation, TranslationModel translation) {
+        MessageModel message = new MessageModel(encryptedContent, sender, conversation);
+        if (translation != null) {
+            message.setTranslation(translation);
+        }
 
-	private void saveMessage(String content, UserModel sender, ConversationModel conversation, TranslationModel translation) {
-		MessageModel message = new MessageModel(content, sender, conversation);
-		if (Objects.nonNull(translation)) {
-			message.setTranslation(translation);
-		}
+        this.messageRepository.save(message);
+    }
 
-		this.messageRepository.save(message);
-	}
+    @Transactional
+    public void editMessage(MessageEditDTO dto) throws Exception {
+        MessageModel message = getMessageById(dto.getId());
+        message.setContent(Encrypt.encrypt(dto.getContent()));
+        message.setIsEdited(Boolean.TRUE);
 
-	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws Exception {
-		MessageModel message = this.messageRepository.findById(dto.getId())
-				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
+        this.messageRepository.save(message);
+        this.sendWebSocketUpdate(message.getConversation().getUserInitiator().getId(), message.getConversation().getUserRecipient().getId());
+    }
 
-		message.setContent(Encrypt.encrypt(dto.getContent()));
-		message.setIsEdited(Boolean.TRUE);
+    @Transactional
+    public void deleteMessage(MessageDeleteDTO dto) {
+        MessageModel message = getMessageById(dto.id());
+        message.setIsDeleted(Boolean.TRUE);
 
-		this.messageRepository.save(message);
+        this.messageRepository.save(message);
+        this.sendWebSocketUpdate(message.getConversation().getUserInitiator().getId(), message.getConversation().getUserRecipient().getId());
+    }
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
-	}
+    private MessageModel getMessageById(Long messageId) {
+        return messageRepository.findById(messageId).orElseThrow(() -> new EntityNotFoundException("Message not found."));
+    }
 
-	public List<ConversationResponseDTO> deleteMessage(MessageDeleteDTO dto) {
-		MessageModel message = this.messageRepository.findById(dto.id())
-				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
+    private void sendWebSocketUpdate(Long senderId, Long receiverId) {
+        List<ConversationResponseDTO> convsSender = this.conversationService.findAllConversationByUserId(senderId, 0);
+        List<ConversationResponseDTO> convsTarget = this.conversationService.findAllConversationByUserId(receiverId, 0);
 
-		message.setIsDeleted(Boolean.TRUE);
+        this.messagingTemplate.convertAndSend("/topic/messages/" + senderId, new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convsSender));
+        this.messagingTemplate.convertAndSend("/topic/messages/" + receiverId, new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convsTarget));
+    }
 
-		this.messageRepository.save(message);
-
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
-	}
-
-	public List<MessageRecord> getMessages(MessageRequestDTO dto) {
-		Optional<ConversationModel> optConv = this.conversationRepository.findById(dto.getConversationId());
-		if(optConv.isPresent()) {
-			
-		}
-
-		throw new EntityNotFoundException("Conversation not founded. ID: " + dto.getConversationId());
+	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {
+		return conversationService.findAllConversationByUserId(dto.getUserId(), dto.getPageNumber()).stream().filter(conv -> conv.getId().equals(dto.getConversationId())).findFirst()
+				.orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
 	}
 }

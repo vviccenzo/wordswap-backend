@@ -14,9 +14,6 @@ public class MessageContent {
 	private String content;
 
 	@JsonInclude(Include.NON_NULL)
-	private String contentSending;
-
-	@JsonInclude(Include.NON_NULL)
 	private String contentReceiving;
 
 }

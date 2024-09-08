@@ -1,29 +1,32 @@
 package com.backend.wordswap.conversation;
 
-import com.backend.wordswap.conversation.entity.ConversationModel;
-import com.backend.wordswap.conversation.factory.ConversationFactory;
-import com.backend.wordswap.message.MessageRepository;
-import com.backend.wordswap.message.dto.MessageCreateDTO;
-import com.backend.wordswap.message.entity.MessageModel;
-import com.backend.wordswap.user.UserRepository;
-import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
-import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.user.entity.UserModel;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
+import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.conversation.factory.ConversationFactory;
+import com.backend.wordswap.message.MessageRepository;
+import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.user.UserRepository;
+import com.backend.wordswap.user.entity.UserModel;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ConversationService {
@@ -34,37 +37,72 @@ public class ConversationService {
 
 	private MessageRepository messageRepository;
 
-	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository,
-			MessageRepository messageRepository) {
+	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository, MessageRepository messageRepository) {
 		this.userRepository = userRepository;
 		this.conversationRepository = conversationRepository;
 		this.messageRepository = messageRepository;
 	}
 
-	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId) {
-		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
-		ConversationFactory conversationFactory = new ConversationFactory();
+	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId, Integer pageNumber) {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
+		Set<Long> conversationIds = this.getAllConversationIds(user);
 
-		Set<Long> conversationsId = user.getInitiatedConversations().stream().map(ConversationModel::getId)
+		Pageable pageable = PageRequest.of(pageNumber, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
+		Map<Long, Long> totalMessagesByConversation = this.getTotalMessagesByConversation(conversationIds);
+		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds, pageable);
+		List<ConversationResponseDTO> conversationResponseDTOS = this.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
+
+		return conversationResponseDTOS;
+	}
+	
+	public Map<Long, Long> getTotalMessagesByConversation(Set<Long> conversationIds) {
+	    List<Object[]> results = this.messageRepository.findTotalMessagesByConversationIds(conversationIds);
+	    Map<Long, Long> totalMessagesByConversation = new HashMap<>();
+	    
+	    for (Object[] result : results) {
+	        Long conversationId = (Long) result[0];
+	        Long messageCount = (Long) result[1];
+	        totalMessagesByConversation.put(conversationId, messageCount);
+	    }
+	    
+	    return totalMessagesByConversation;
+	}
+
+	private Set<Long> getAllConversationIds(UserModel user) {
+		Set<Long> conversationIds = user.getInitiatedConversations().stream().map(ConversationModel::getId)
 				.collect(Collectors.toSet());
 
-		conversationsId.addAll(
+		conversationIds.addAll(
 				user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
 
-		Pageable pageable = PageRequest.of(0, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
+		return conversationIds;
+	}
 
-		Map<Long, List<MessageModel>> messageByConversation = this.messageRepository
-				.findAllByConversationIdIn(conversationsId, pageable).stream()
-				.collect(Collectors.groupingBy(msg -> msg.getConversation().getId()));
+	private Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
+		Map<Long, List<MessageModel>> messageGrouped = new HashMap<>();
+		
+		conversationIds.forEach(convId -> {
+			messageGrouped.put(convId, this.messageRepository.findAllByConversationId(convId, pageable));
+		});
+		
+		return messageGrouped;
+	}
 
-		user.getInitiatedConversations().stream().filter(f -> !f.getIsDeletedInitiator())
-				.forEach(conversationModel -> conversationResponseDTOS
-						.add(conversationFactory.buildMessages(userId, conversationModel, messageByConversation)));
+	private List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId, Map<Long, Long> totalMessagesByConversation) {
+		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
+		user.getInitiatedConversations().stream().filter(conversation -> !conversation.getIsDeletedInitiator())
+				.forEach(conversation -> conversationResponseDTOS
+						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
 
-		user.getReceivedConversations().stream().filter(f -> !f.getIsDeletedRecipient())
-				.forEach(conversationModel -> conversationResponseDTOS
-						.add(conversationFactory.buildMessages(userId, conversationModel, messageByConversation)));
+		user.getReceivedConversations().stream().filter(conversation -> !conversation.getIsDeletedRecipient())
+				.forEach(conversation -> conversationResponseDTOS
+						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
+
+	    conversationResponseDTOS.sort((c1, c2) -> {
+	        LocalDateTime lastMessageC1 = c1.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
+	        LocalDateTime lastMessageC2 = c2.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
+	        return lastMessageC2.compareTo(lastMessageC1);
+	    });
 
 		return conversationResponseDTOS;
 	}
@@ -72,8 +110,7 @@ public class ConversationService {
 	@Transactional
 	public ConversationModel createNewConversation(MessageCreateDTO dto) {
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-		UserModel receiver = this.userRepository.findById(dto.getReceiverId())
-				.orElseThrow(EntityNotFoundException::new);
+		UserModel receiver = this.userRepository.findById(dto.getReceiverId()).orElseThrow(EntityNotFoundException::new);
 
 		ConversationModel conversation = new ConversationModel();
 		conversation.setCreatedDate(LocalDate.now());

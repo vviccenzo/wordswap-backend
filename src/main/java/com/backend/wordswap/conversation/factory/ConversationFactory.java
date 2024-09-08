@@ -10,6 +10,8 @@ import com.backend.wordswap.translation.configuration.dto.TranslationConfigRespo
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 import com.backend.wordswap.translation.entity.TranslationModel;
 
+import lombok.experimental.UtilityClass;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -26,9 +28,10 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+@UtilityClass
 public class ConversationFactory {
 
-	public ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
+	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation, Map<Long, Long> totalMessagesByConversation) {
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conv.getId());
 		dto.setSenderId(conv.getUserInitiator().getId());
@@ -40,19 +43,20 @@ public class ConversationFactory {
 		Long userRecipient = conv.getUserRecipient().getId();
 
 		Map<Long, TranslationConfigResponseDTO> configsUser = new HashMap<>();
-		configsUser.put(userInitiator, this.buildTranslationConfig(userInitiator, conv));
-		configsUser.put(userRecipient, this.buildTranslationConfig(userRecipient, conv));
+		configsUser.put(userInitiator, buildTranslationConfig(userInitiator, conv));
+		configsUser.put(userRecipient, buildTranslationConfig(userRecipient, conv));
 
-		dto.setProfilePic(this.getProfilePic(conv, isInitiator));
-		dto.setConversationName(this.getConversationName(conv, isInitiator));
+		dto.setProfilePic(getProfilePic(conv, isInitiator));
+		dto.setConversationName(getConversationName(conv, isInitiator));
+		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
 
-		List<MessageRecord> userMessages = this.getDecryptedMessages(conv, userId, true, messageByConversation);
-		List<MessageRecord> targetUserMessages = this.getDecryptedMessages(conv, userId, false, messageByConversation);
+		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
+		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
 
 		dto.setConfigsUser(configsUser);
 		dto.setUserMessages(userMessages);
 		dto.setTargetUserMessages(targetUserMessages);
-		dto.setLastMessage(this.determineLastMessage(userMessages, targetUserMessages));
+		dto.setLastMessage(determineLastMessage(userMessages, targetUserMessages));
 
 		return dto;
 	}
@@ -60,10 +64,8 @@ public class ConversationFactory {
 	private TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
 		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
 
-		dto.setSendingTranslation(this.getTranslationTarget(conversation, userId, TranslationType.SENDING));
-		dto.setReceivingTranslation(this.getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
-		dto.setIsSendingTranslation(this.isTranslationActive(conversation, userId, TranslationType.SENDING));
-		dto.setIsReceivingTranslation(this.isTranslationActive(conversation, userId, TranslationType.RECEIVING));
+		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsReceivingTranslation(isTranslationActive(conversation, userId, TranslationType.RECEIVING));
 
 		return dto;
 	}
@@ -85,16 +87,24 @@ public class ConversationFactory {
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
 		if (isInitiator) {
-			if (Objects.nonNull(conversationModel.getUserRecipient())) {
-				return this
-						.convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+			if (Objects.nonNull(conversationModel.getUserRecipient())
+					&& Objects.nonNull(conversationModel.getUserRecipient().getUserProfile())) {
+				if (Objects.nonNull(conversationModel.getUserRecipient().getUserProfile().getContent())) {
+					return convertByteArrayToBase64(conversationModel.getUserRecipient().getUserProfile().getContent());
+				} else {
+					return "";
+				}
 			} else {
 				return "";
 			}
 		} else {
 			if (Objects.nonNull(conversationModel.getUserInitiator())) {
-				return this
-						.convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+				if (Objects.nonNull(conversationModel.getUserInitiator().getUserProfile())
+						&& Objects.nonNull(conversationModel.getUserInitiator().getUserProfile().getContent())) {
+					return convertByteArrayToBase64(conversationModel.getUserInitiator().getUserProfile().getContent());
+				} else {
+					return "";
+				}
 			} else {
 				return "";
 			}
@@ -109,14 +119,13 @@ public class ConversationFactory {
 		return isInitiator ? conv.getUserRecipient().getName() : conv.getUserInitiator().getName();
 	}
 
-	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages,
-			Map<Long, List<MessageModel>> messageByConversation) {
+	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages, Map<Long, List<MessageModel>> messageByConversation) {
 		List<MessageModel> messages = messageByConversation.getOrDefault(conv.getId(), new ArrayList<>());
 		List<MessageRecord> decryptedMessages = new ArrayList<>();
 
 		for (MessageModel message : messages) {
 			if (message.getSender().getId().equals(userId) == isUserMessages) {
-				decryptedMessages.add(this.decryptMessage(message));
+				decryptedMessages.add(decryptMessage(message));
 			}
 		}
 
@@ -124,63 +133,56 @@ public class ConversationFactory {
 	}
 
 	private MessageRecord decryptMessage(MessageModel msg) {
-	    try {
-	        String decryptedContent = Encrypt.decrypt(msg.getContent());
+		try {
+			String decryptedContent = Encrypt.decrypt(msg.getContent());
+			String contentReceiver = Optional.ofNullable(msg.getTranslation()).map(TranslationModel::getContentReceiver).orElse(decryptedContent);
+			MessageContent messageContent = new MessageContent(decryptedContent, contentReceiver);
 
-	        String contentSending = Optional.ofNullable(msg.getTranslation())
-	                                        .map(TranslationModel::getContentSending)
-	                                        .orElse(decryptedContent);
-
-	        String contentReceiver = Optional.ofNullable(msg.getTranslation())
-	                                         .map(TranslationModel::getContentReceiver)
-	                                         .orElse(decryptedContent);
-
-	        MessageContent messageContent = new MessageContent(decryptedContent, contentSending, contentReceiver);
-
-	        return MessageRecord.builder()
-	                            .id(msg.getId())
-	                            .content(decryptedContent)
-	                            .sender(msg.getSender().getUsername())
-	                            .timeStamp(msg.getSentAt())
-	                            .senderId(msg.getSender().getId())
-	                            .isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
-	                            .isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
-	                            .messageContent(messageContent)
-	                            .build();
-	    } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-	        throw new RuntimeException(e);
-	    }
+			return MessageRecord.builder()
+					.id(msg.getId())
+					.content(decryptedContent)
+					.sender(msg.getSender().getUsername())
+					.timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
+					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
+					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
+					.messageContent(messageContent)
+					.build();
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+				| BadPaddingException e) {
+			throw new RuntimeException(e);
+		}
 	}
-
 
 	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {
 		Map.Entry<LocalDateTime, String> lastUserMessage = getLastMessageEntry(user);
 		Map.Entry<LocalDateTime, String> lastTargetUserMessage = getLastMessageEntry(target);
 
-		if (lastUserMessage != null && lastTargetUserMessage != null) {
-			LocalDateTime lastMessageKey;
-			String lastMessageContent;
-
-			if (!lastUserMessage.getKey().isBefore(lastTargetUserMessage.getKey())) {
-				lastMessageKey = lastUserMessage.getKey();
-				lastMessageContent = lastUserMessage.getValue();
-			} else {
-				lastMessageKey = lastTargetUserMessage.getKey();
-				lastMessageContent = lastTargetUserMessage.getValue();
-			}
-
-			Map<LocalDateTime, String> lastMessage = new HashMap<>();
-			lastMessage.put(lastMessageKey, lastMessageContent);
-			return lastMessage;
+		if (lastUserMessage == null) {
+			return createLastMessageMap(lastTargetUserMessage);
 		}
 
-		return new HashMap<>();
+		if (lastTargetUserMessage == null) {
+			return createLastMessageMap(lastUserMessage);
+		}
+
+		Map.Entry<LocalDateTime, String> lastMessage = lastUserMessage.getKey().isAfter(lastTargetUserMessage.getKey())
+				? lastUserMessage
+				: lastTargetUserMessage;
+
+		return createLastMessageMap(lastMessage);
+	}
+
+	private static Map<LocalDateTime, String> createLastMessageMap(Map.Entry<LocalDateTime, String> lastMessage) {
+		Map<LocalDateTime, String> messageMap = new HashMap<>();
+		if (lastMessage != null) {
+			messageMap.put(lastMessage.getKey(), lastMessage.getValue());
+		}
+
+		return messageMap;
 	}
 
 	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> msg) {
-	    return msg.stream()
-	              .max(Comparator.comparing(MessageRecord::getTimeStamp))
-	              .map(message -> Map.entry(message.getTimeStamp(), message.getContent()))
-	              .orElse(null);
+		return msg.stream().max(Comparator.comparing(MessageRecord::getTimeStamp))
+				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
 	}
 }

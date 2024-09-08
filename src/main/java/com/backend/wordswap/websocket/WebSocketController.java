@@ -1,47 +1,49 @@
 package com.backend.wordswap.websocket;
 
-import java.util.List;
-
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.friendship.request.FriendshipRequestService;
 import com.backend.wordswap.message.MessageService;
-import com.backend.wordswap.message.dto.MessageCreateDTO;
-import com.backend.wordswap.message.dto.MessageDeleteDTO;
-import com.backend.wordswap.message.dto.MessageEditDTO;
 
 @Controller
 public class WebSocketController {
 
 	private final MessageService messageService;
 
-	public WebSocketController(MessageService messageService) {
+	private final FriendshipRequestService friendshipRequestService;
+
+	public WebSocketController(MessageService messageService, FriendshipRequestService friendshipRequestService) {
 		this.messageService = messageService;
+		this.friendshipRequestService = friendshipRequestService;
 	}
 
 	@MessageMapping("/chat/{roomId}")
-	@SendTo("/topic/messages/{roomId}")
-	public List<ConversationResponseDTO> sendMessage(@DestinationVariable String roomId,
-			@RequestBody MessageCreateDTO dto) throws Exception {
-		return this.messageService.sendMessage(dto);
-	}
-
-	@SendTo("/topic/messages/{roomId}")
-	@MessageMapping("/chat/edit/{roomId}")
-	public List<ConversationResponseDTO> editMessage(@DestinationVariable String roomId,
-			@RequestBody MessageEditDTO dto) throws Exception {
-		return this.messageService.editMessage(dto);
-	}
-
-	@SendTo("/topic/messages/{roomId}")
-	@MessageMapping("/chat/delete/{roomId}")
-	public List<ConversationResponseDTO> deleteMessage(@DestinationVariable String roomId,
-			@RequestBody MessageDeleteDTO dto) {
-		return this.messageService.deleteMessage(dto);
+	public void handleWebSocketAction(@DestinationVariable String roomId, @RequestBody WebSocketRequest request) throws Exception {
+		switch (request.getAction()) {
+			case SEND_MESSAGE:
+				this.messageService.sendMessage(request.getMessageCreateDTO());
+				break;
+			case EDIT_MESSAGE:
+				this.messageService.editMessage(request.getMessageEditDTO());
+				break;
+			case DELETE_MESSAGE:
+				this.messageService.deleteMessage(request.getMessageDeleteDTO());
+				break;
+			case SEND_FRIEND_REQUEST:
+				this.friendshipRequestService.sendInvite(request.getFriendRequestDTO(), WebSocketAction.SEND_FRIEND_REQUEST);
+				break;
+			case DELETE_FRIEND:
+				this.friendshipRequestService.deleteFriendship(request.getFriendshipDeleteRequestDTO());
+				break;
+			case UPDATE_FRIEND_REQUEST:
+				this.friendshipRequestService.changeStatus(request.getFriendshipRequestUpdateDTO());
+				break;
+			default:
+				throw new IllegalArgumentException("Ação desconhecida: " + request.getAction());
+		}
 	}
 
 }
