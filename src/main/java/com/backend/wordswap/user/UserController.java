@@ -26,7 +26,7 @@ public class UserController {
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public UserDTO save(@RequestParam("username") String username, @RequestParam("password") String password,
 			@RequestParam("email") String email, @RequestParam(name = "file", required = false) MultipartFile file, @RequestParam("name") String name) throws IOException {
-		return this.userService.save(new UserCreateDTO(name, username, email, password, file));
+		return this.userService.save(new UserCreateDTO(name, email, username, password, file));
 	}
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -4,6 +4,7 @@ import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.encrypt.Encrypt;
+import com.backend.wordswap.friendship.dto.FriendshipDTO;
 import com.backend.wordswap.gemini.GeminiAPIService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
@@ -16,8 +17,13 @@ import com.backend.wordswap.translation.configuration.enumeration.TranslationTyp
 import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.websocket.WebSocketAction;
+import com.backend.wordswap.websocket.WebSocketResponse;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -31,6 +37,7 @@ public class MessageService {
 
 	private final GeminiAPIService geminiAPIService;
 	private final ConversationService conversationService;
+	private final SimpMessagingTemplate messagingTemplate;
 
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
@@ -38,23 +45,28 @@ public class MessageService {
 
 	public MessageService(MessageRepository messageRepository, UserRepository userRepository, 
 			ConversationService conversationService, GeminiAPIService geminiAPIService,
-			TranslationConfigurationRepository translationConfigRepository
+			TranslationConfigurationRepository translationConfigRepository, SimpMessagingTemplate messagingTemplate
 	) {
 		this.messageRepository = messageRepository;
 		this.userRepository = userRepository;
 		this.conversationService = conversationService;
 		this.geminiAPIService = geminiAPIService;
 		this.translationConfigRepository = translationConfigRepository;
+		this.messagingTemplate = messagingTemplate;
 	}
 
-	public List<ConversationResponseDTO> sendMessage(MessageCreateDTO dto) throws Exception {
+	public void sendMessage(MessageCreateDTO dto) throws Exception {
 		ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
 		TranslationModel translation = this.processContent(dto);
 
 		this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
 
-		return this.conversationService.findAllConversationByUserId(dto.getSenderId());
+		List<ConversationResponseDTO> convsSender = this.conversationService.findAllConversationByUserId(dto.getSenderId());
+		List<ConversationResponseDTO> convsTarget = this.conversationService.findAllConversationByUserId(dto.getReceiverId());
+
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getSenderId(), new WebSocketResponse<List<ConversationResponseDTO>>(WebSocketAction.SEND_MESSAGE, convsSender));
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getReceiverId(), new WebSocketResponse<List<ConversationResponseDTO>>(WebSocketAction.SEND_MESSAGE, convsTarget));
 	}
 
 	private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
@@ -107,24 +119,29 @@ public class MessageService {
 	}
 
 	@Transactional
-	public List<ConversationResponseDTO> editMessage(MessageEditDTO dto) throws Exception {
+	public void editMessage(MessageEditDTO dto) throws Exception {
 		MessageModel message = this.messageRepository.findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException("Message not found."));
 		message.setContent(Encrypt.encrypt(dto.getContent()));
 		message.setIsEdited(Boolean.TRUE);
 
 		this.messageRepository.save(message);
+		List<ConversationResponseDTO> convs = this.conversationService.findAllConversationByUserId(dto.getSenderId());
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + message.getConversation().getUserInitiator().getId(), convs);
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + message.getConversation().getUserRecipient().getId(), convs);
 	}
 
 	@Transactional
-	public List<ConversationResponseDTO> deleteMessage(MessageDeleteDTO dto) {
+	public void deleteMessage(MessageDeleteDTO dto) {
 		MessageModel message = this.messageRepository.findById(dto.id()).orElseThrow(() -> new EntityNotFoundException("Message not found."));
 		message.setIsDeleted(Boolean.TRUE);
 
 		this.messageRepository.save(message);
 
-		return this.conversationService.findAllConversationByUserId(message.getSender().getId());
+		List<ConversationResponseDTO> convs = this.conversationService.findAllConversationByUserId(dto.senderId());
+
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + message.getConversation().getUserInitiator().getId(), convs);
+	    this.messagingTemplate.convertAndSend("/topic/messages/" + message.getConversation().getUserRecipient().getId(), convs);
 	}
 
 	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {

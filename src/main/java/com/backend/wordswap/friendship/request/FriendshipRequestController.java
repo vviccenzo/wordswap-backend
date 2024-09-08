@@ -25,10 +25,10 @@ public class FriendshipRequestController {
 		this.friendshipRequestService = friendshipRequestService;
 	}
 
-	@PostMapping(path = "/send-invite", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public FriendshipDTO sendInvite(@RequestBody FriendshipRequestCreateDTO dto) {
-		return this.friendshipRequestService.sendInvite(dto);
-	}
+//	@PostMapping(path = "/send-invite", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+//	public FriendshipDTO sendInvite(@RequestBody FriendshipRequestCreateDTO dto) {
+//		return this.friendshipRequestService.sendInvite(dto);
+//	}
 
 	@GetMapping(path = "/find-pending-invites", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<FriendshipDTO> findAllByUserId(@RequestParam("userId") Long userId) {

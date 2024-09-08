@@ -17,14 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/message")
 public class MessageController {
 
-	@Autowired
-	private MessageService messageService;
-
-	@PostMapping(path = "/send-message", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public List<ConversationResponseDTO> sendMessage(@RequestBody MessageCreateDTO dto) throws Exception {
-		return this.messageService.sendMessage(dto);
-	}
-
 	@PostMapping(path = "/get-messages")
 	public ConversationResponseDTO getMessages(MessageRequestDTO dto) {
 		return this.getMessages(dto);

@@ -9,8 +9,10 @@ public class MessageEditDTO {
 
 	private Long id;
 
+	private Long senderId;
+
 	private String content;
-	
+
 	private int pageNumber;
 
 }

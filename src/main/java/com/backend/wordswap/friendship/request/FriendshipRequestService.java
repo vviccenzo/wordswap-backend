@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.friendship.dto.FriendshipDTO;
@@ -14,23 +15,28 @@ import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
+import com.backend.wordswap.websocket.WebSocketAction;
+import com.backend.wordswap.websocket.WebSocketResponse;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class FriendshipRequestService {
+	
+	private final SimpMessagingTemplate messagingTemplate;
 
 	private final UserRepository userRepository;
 
 	private final FriendshipRequestRepository friendshipRequestRepository;
 
 	public FriendshipRequestService(UserRepository userRepository,
-			FriendshipRequestRepository friendshipRequestRepository) {
+			FriendshipRequestRepository friendshipRequestRepository, SimpMessagingTemplate messagingTemplate) {
 		this.userRepository = userRepository;
 		this.friendshipRequestRepository = friendshipRequestRepository;
+		this.messagingTemplate = messagingTemplate;
 	}
 
-	public FriendshipDTO sendInvite(FriendshipRequestCreateDTO dto) {
+	public void sendInvite(FriendshipRequestCreateDTO dto, WebSocketAction socketAction) {
 
 		this.validateRequest(dto);
 
@@ -52,12 +58,17 @@ public class FriendshipRequestService {
 		sentModel.setRequestDate(LocalDateTime.now());
 		sentModel = this.friendshipRequestRepository.save(sentModel);
 
-		return FriendshipRequestFactory.buildDTO(sentModel);
+		List<FriendshipDTO> requestsSender = this.findAllByUserId(dto.getSenderId());
+		List<FriendshipDTO> requestsTarget = this.findAllByUserId(optTarget.get().getId());
+
+		this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getSenderId(),
+				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsSender));
+		this.messagingTemplate.convertAndSend("/topic/messages/" + optTarget.get().getId(),
+				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsTarget));
 	}
 
 	private boolean validateRequest(FriendshipRequestCreateDTO dto) {
-		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository
-				.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
+		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
 		if (optRequest.isPresent()) {
 			throw new FriendshipAlreadySendedException("Friendship already sended.");
 		}
