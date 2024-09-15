@@ -21,6 +21,10 @@ public class ConversationResponseDTO {
 
 	private Long receiverId;
 
+	private String senderCode;
+
+	private String receiverCode;
+
 	private String conversationName;
 
 	private String profilePic;

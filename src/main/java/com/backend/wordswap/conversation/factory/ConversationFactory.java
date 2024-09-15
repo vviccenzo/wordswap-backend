@@ -36,6 +36,8 @@ public class ConversationFactory {
 		dto.setId(conv.getId());
 		dto.setSenderId(conv.getUserInitiator().getId());
 		dto.setReceiverId(conv.getUserRecipient().getId());
+		dto.setReceiverCode(conv.getUserRecipient().getUserCode());
+		dto.setSenderCode(conv.getUserInitiator().getUserCode());
 
 		boolean isInitiator = conv.getUserInitiator().getId().equals(userId);
 

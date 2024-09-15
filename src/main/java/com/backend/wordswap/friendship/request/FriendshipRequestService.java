@@ -88,6 +88,7 @@ public class FriendshipRequestService {
 	@Transactional
 	public void changeStatus(FriendshipRequestUpdateDTO dto) {
 		FriendshipRequestModel invite = this.friendshipRequestRepository.findById(dto.inviteId()).orElseThrow();
+
 		invite.setStatus(dto.statusType());
 
 		this.friendshipRequestRepository.save(invite);
@@ -99,8 +100,7 @@ public class FriendshipRequestService {
 			user1.getFriends().add(user2);
 			user2.getFriends().add(user1);
 
-			this.userRepository.save(user1);
-			this.userRepository.save(user2);
+			this.userRepository.saveAll(List.of(user1, user2));
 
 			List<UserDTO> friendsSender = this.userService.findFriendsByUserId(user1.getId());
 			List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user2.getId());
@@ -133,8 +133,7 @@ public class FriendshipRequestService {
 
 		friend.getFriends().removeIf(friendToDelete -> friendToDelete.getId().equals(dto.userId()));
 
-		this.userRepository.save(user);
-		this.userRepository.save(friend);
+		this.userRepository.saveAll(List.of(user, friend));
 
 		List<UserDTO> friendsSender = this.userService.findFriendsByUserId(friend.getId());
 		List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user.getId());
@@ -146,7 +145,6 @@ public class FriendshipRequestService {
 	}
 
 	public List<FriendshipDTO> findAllByUserId(Long userId) {
-		return this.friendshipRequestRepository.findAllByReceiverIdAndStatus(userId, StatusType.PENDING).stream()
-				.map(FriendshipRequestFactory::buildDTO).toList();
+		return this.friendshipRequestRepository.findAllByReceiverIdAndStatus(userId, StatusType.PENDING).stream().map(FriendshipRequestFactory::buildDTO).toList();
 	}
 }

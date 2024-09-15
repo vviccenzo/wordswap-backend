@@ -17,15 +17,17 @@ public class UserDTO {
 
 	private Long id;
 
-	private String label;
-
-	private LocalDate createdDate;
-
 	private Long conversationId;
 
-	private String profilePic;
-
 	private String bio;
+
+	private String label;
+
+	private String profilePic;
+	
+	private String userCode;
+
+	private LocalDate createdDate;
 
 	public UserDTO(UserModel user) {
 		this.id = user.getId();

@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.backend.wordswap.auth.TokenService;
+import com.backend.wordswap.auth.token.TokenService;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
@@ -32,8 +32,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 	    if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
 	        filterChain.doFilter(request, response);
@@ -49,8 +48,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 				throw new UserNotFoundException("User not valid.");
 			}
 
-			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null,
-					optUser.get().getAuthorities());
+			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null, optUser.get().getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
@@ -62,12 +60,13 @@ public class SecurityFilter extends OncePerRequestFilter {
 		if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
 			return bearerToken.substring(7);
 		}
+
 		return null;
 	}
 
 	private boolean isAllowedPath(ServletRequest request) {
 	    String path = ((HttpServletRequest) request).getRequestURI();
-	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path) || path.contains("/translation");
+	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path) || path.contains("/translation" );
 	}
 
 	private boolean isAllowedMethod(ServletRequest request) {

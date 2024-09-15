@@ -63,6 +63,7 @@ public class UserService {
 		if (this.userRepository.findByEmail(dto.getEmail()).isPresent()) {
 			throw new UserEmailAlreadyExistsException("User with this email already exists.");
 		}
+
 		if (this.userRepository.findByUsername(dto.getUsername()).isPresent()) {
 			throw new UsernameAlreadyExistsException("User with this username already exists.");
 		}

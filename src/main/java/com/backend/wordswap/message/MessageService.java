@@ -66,10 +66,20 @@ public class MessageService {
         List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getReceiverId());
         if (!receiverConfigs.isEmpty()) {
             TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
-            if (this.isTranslationActive(configReceiver)) {
-                translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
-                translation.setContentReceiver(this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage()));
-            }
+			if (this.isTranslationActive(configReceiver)) {
+				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
+
+				String textTranslated;
+				try {
+					textTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
+				} catch (Exception e) {
+					e.printStackTrace();
+
+					textTranslated = dto.getContent();
+				}
+
+				translation.setContentReceiver(textTranslated);
+			}
         }
 
         return translation;

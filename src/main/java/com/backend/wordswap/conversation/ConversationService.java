@@ -62,6 +62,7 @@ public class ConversationService {
 	    for (Object[] result : results) {
 	        Long conversationId = (Long) result[0];
 	        Long messageCount = (Long) result[1];
+
 	        totalMessagesByConversation.put(conversationId, messageCount);
 	    }
 	    
@@ -69,11 +70,9 @@ public class ConversationService {
 	}
 
 	private Set<Long> getAllConversationIds(UserModel user) {
-		Set<Long> conversationIds = user.getInitiatedConversations().stream().map(ConversationModel::getId)
-				.collect(Collectors.toSet());
+		Set<Long> conversationIds = user.getInitiatedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet());
 
-		conversationIds.addAll(
-				user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
+		conversationIds.addAll(user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
 
 		return conversationIds;
 	}
@@ -81,9 +80,7 @@ public class ConversationService {
 	private Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
 		Map<Long, List<MessageModel>> messageGrouped = new HashMap<>();
 		
-		conversationIds.forEach(convId -> {
-			messageGrouped.put(convId, this.messageRepository.findAllByConversationId(convId, pageable));
-		});
+		conversationIds.forEach(convId -> messageGrouped.put(convId, this.messageRepository.findAllByConversationId(convId, pageable)));
 		
 		return messageGrouped;
 	}
@@ -91,16 +88,17 @@ public class ConversationService {
 	private List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId, Map<Long, Long> totalMessagesByConversation) {
 		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
 		user.getInitiatedConversations().stream().filter(conversation -> !conversation.getIsDeletedInitiator())
-				.forEach(conversation -> conversationResponseDTOS
-						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
+				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
+				.forEach(conversationResponseDTOS::add);
 
 		user.getReceivedConversations().stream().filter(conversation -> !conversation.getIsDeletedRecipient())
-				.forEach(conversation -> conversationResponseDTOS
-						.add(ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation)));
+				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
+				.forEach(conversationResponseDTOS::add);
 
 	    conversationResponseDTOS.sort((c1, c2) -> {
 	        LocalDateTime lastMessageC1 = c1.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
 	        LocalDateTime lastMessageC2 = c2.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
+
 	        return lastMessageC2.compareTo(lastMessageC1);
 	    });
 
