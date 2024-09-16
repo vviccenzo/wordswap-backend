@@ -47,7 +47,7 @@ public class UserFactory {
 	private static UserDTO mapToUserDTO(UserModel user, Long currentUserId) {
 		UserDTO userDTO = new UserDTO();
 		userDTO.setId(user.getId());
-		userDTO.setLabel(user.getUsername());
+		userDTO.setLabel(user.getName());
 		userDTO.setCreatedDate(user.getCreationDate());
 		userDTO.setConversationId(findConversationId(user, currentUserId));
 		userDTO.setProfilePic(getProfilePic(user));

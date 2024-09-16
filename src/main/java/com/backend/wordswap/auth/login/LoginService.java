@@ -44,7 +44,7 @@ public class LoginService {
 		byte[] profilePic = Objects.nonNull(userModel.getUserProfile()) ? userModel.getUserProfile().getContent()
 				: null;
 		UserInfoDTO userInfo = new UserInfoDTO(userModel.getId(), profilePic, userModel.getName(),
-				StringUtils.isNotBlank(userModel.getBio()) ? userModel.getBio() : "");
+				StringUtils.isNotBlank(userModel.getBio()) ? userModel.getBio() : "", userModel.getUserCode());
 
 		return new AuthDTO(token, userInfo);
 	}
