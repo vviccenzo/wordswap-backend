@@ -21,4 +21,5 @@ public class TranslationConfigurationController {
 	public TranslationConfigResponseDTO configurateTranslation(@RequestBody TranslationConfigDTO dto) {
 		return this.translationConfigurationService.configurateTranslation(dto);
 	}
+
 }

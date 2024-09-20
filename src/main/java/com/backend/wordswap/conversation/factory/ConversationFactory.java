@@ -67,12 +67,13 @@ public class ConversationFactory {
 		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
 
 		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
-		dto.setIsReceivingTranslation(isTranslationActive(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsReceivingTranslation(isActive(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsImprovingText(isActive(conversation, userId, TranslationType.IMPROVING));
 
 		return dto;
 	}
 
-	private boolean isTranslationActive(ConversationModel conversation, Long userId, TranslationType type) {
+	private boolean isActive(ConversationModel conversation, Long userId, TranslationType type) {
 		return conversation.getTranslationConfigurations().stream()
 				.anyMatch(config -> config.getUser().getId().equals(userId) && config.getType().equals(type)
 						&& config.getIsActive());

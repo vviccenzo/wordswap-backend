@@ -19,10 +19,8 @@ public class TranslationConfigDTO {
 
 	private String receivingTranslation;
 
-	private String sendingTranslation;
-
-	private Boolean isSendingTranslation;
-
 	private Boolean isReceivingTranslation;
+
+	private Boolean isImprovingText;
 
 }

@@ -7,12 +7,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TranslationConfigResponseDTO {
 
-	private String sendingTranslation;
-
 	private String receivingTranslation;
 
-	private Boolean isSendingTranslation = Boolean.FALSE;
-
 	private Boolean isReceivingTranslation = Boolean.FALSE;
+
+	private Boolean isImprovingText = Boolean.FALSE;
 
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
@@ -50,49 +51,68 @@ public class MessageService {
 	}
 
 	@Transactional
-    public void sendMessage(MessageCreateDTO dto) throws Exception {
-        ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
-        UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-        TranslationModel translation = this.processContent(dto);
+	public void sendMessage(MessageCreateDTO dto) throws Exception {
+		ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
+		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
+		List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getReceiverId());
+		List<TranslationConfigurationModel> senderConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getSenderId());
 
-        this.saveMessage(Encrypt.encrypt(dto.getContent()), sender, conversation, translation);
-        this.sendWebSocketUpdate(dto.getSenderId(), dto.getReceiverId());
-    }
+		String content = dto.getContent();
+		if (!CollectionUtils.isEmpty(senderConfigs)) {
+			content = this.processImprovingTranslation(content, senderConfigs);
+		}
 
-    private TranslationModel processContent(MessageCreateDTO dto) throws Exception {
-        TranslationModel translation = new TranslationModel();
-        String content = dto.getContent();
+		TranslationModel translation = this.processContent(content, receiverConfigs);
 
-        List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getReceiverId());
-        if (!receiverConfigs.isEmpty()) {
-            TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
-			if (this.isTranslationActive(configReceiver)) {
-				translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
-
-				String textTranslated;
-				try {
-					textTranslated = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
-				} catch (Exception e) {
-					e.printStackTrace();
-
-					textTranslated = dto.getContent();
-				}
-
-				translation.setContentReceiver(textTranslated);
-			}
-        }
-
-        return translation;
-    }
-
-	private List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
-		List<TranslationConfigurationModel> configs = this.translationConfigRepository.findAllByConversationId(conversationId);
-		return configs.stream().filter(config -> receiverId.equals(config.getUser().getId())).toList();
+		this.saveMessage(Encrypt.encrypt(content), sender, conversation, translation);
+		this.sendWebSocketUpdate(dto.getSenderId(), dto.getReceiverId());
 	}
 
-    private boolean isTranslationActive(TranslationConfigurationModel configReceiver) {
-        return configReceiver != null && Boolean.TRUE.equals(configReceiver.getIsActive());
-    }
+	private TranslationModel processContent(String content, List<TranslationConfigurationModel> receiverConfigs) throws Exception {
+	    TranslationModel translation = new TranslationModel();
+
+	    if (!CollectionUtils.isEmpty(receiverConfigs)) {
+	    	this.processReceiverTranslation(content, translation, receiverConfigs);
+	    }
+
+	    return translation;
+	}
+
+	private void processReceiverTranslation(String content, TranslationModel translation, List<TranslationConfigurationModel> receiverConfigs) {
+	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
+
+	    if (configReceiver != null && Boolean.TRUE.equals(configReceiver.getIsActive())) {
+	        translation.setLanguageCodeReceiver(configReceiver.getTargetLanguage());
+
+	        try {
+	            String translatedText = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
+	            translation.setContentReceiver(translatedText);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            translation.setContentReceiver(content);
+	        }
+	    }
+	}
+
+	private String processImprovingTranslation(String content, List<TranslationConfigurationModel> receiverConfigs) {
+	    TranslationConfigurationModel configImproving = this.getTranslationConfig(receiverConfigs, TranslationType.IMPROVING);
+	    String contentImproved = content;
+
+	    if (configImproving != null && configImproving.getIsActive()) {
+	        try {
+	        	contentImproved = this.geminiAPIService.improveText(content);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    return contentImproved;
+	}
+
+	private List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
+		return this.translationConfigRepository.findAllByConversationId(conversationId).stream()
+				.filter(config -> receiverId.equals(config.getUser().getId())).toList();
+	}
 
 	private TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
 		return configs.stream().filter(config -> type.equals(config.getType()) && config.getIsActive()).findFirst()

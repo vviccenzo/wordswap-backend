@@ -22,7 +22,9 @@ public class GeminiAPIService {
 
 	private static final String GEMINI_KEY = "AIzaSyDeFBuYaYIxP4DMFUOeQg4Uy7YfzUG8y9g";
 
-	private static final String PROMPT = "Preciso que você traduza essa mensagem: %s. Para esta lingua: %s, e me retorne somente a tradução e nada mais.";
+	private static final String PROMPT_TRANSLATE = "Preciso que você traduza essa mensagem: %s. Para esta lingua: %s, e me retorne somente a tradução e nada mais.";
+
+	private static final String PROMPT_IMPROVE = "Preciso que você melhore essa mensagem, ou seja, melhore ortografia e gramática: %s. E me retorne somente a mensagem melhorada e nada mais.";
 
 	public String translateText(String text, String language) throws Exception {
 		String apiUrl = String.format(API_URL_TEMPLATE, GEMINI_KEY);
@@ -34,7 +36,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", this.formatPrompt(text, language));
+		partsNode.put("text", this.formatPromptTranslate(text, language));
 		contentNode.set("parts", objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();
@@ -54,8 +56,8 @@ public class GeminiAPIService {
 		return this.extractTextFromResponse(response.getBody());
 	}
 
-	private String formatPrompt(String text, String language) {
-		return String.format(PROMPT, text, language);
+	private String formatPromptTranslate(String text, String language) {
+		return String.format(PROMPT_TRANSLATE, text, language);
 	}
 	
 	public String extractTextFromResponse(String jsonResponse) throws Exception {
@@ -68,6 +70,41 @@ public class GeminiAPIService {
 	            return candidate.getContent().getParts()[0].getText();
 	        }
 	    }
+
 	    return null;
+	}
+	
+	public String formatPromptImprove(String text) {
+		return String.format(PROMPT_IMPROVE, text);
+	}
+	
+	public String improveText(String text) throws Exception {
+		String apiUrl = String.format(API_URL_TEMPLATE, GEMINI_KEY);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		ObjectNode contentNode = objectMapper.createObjectNode();
+		ObjectNode partsNode = objectMapper.createObjectNode();
+
+		partsNode.put("text", this.formatPromptImprove(text));
+		contentNode.set("parts", objectMapper.createArrayNode().add(partsNode));
+
+		ObjectNode requestBodyNode = objectMapper.createObjectNode();
+		requestBodyNode.set("contents", objectMapper.createArrayNode().add(contentNode));
+
+		String requestBody;
+		try {
+			requestBody = objectMapper.writeValueAsString(requestBodyNode);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to construct JSON request body", e);
+		}
+
+		HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
+
+		return this.extractTextFromResponse(response.getBody());
 	}
 }

@@ -32,12 +32,13 @@ public class SecurityFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-	    if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
-	        filterChain.doFilter(request, response);
-	        return;
-	    }
+		if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
 		String token = this.recoverToken(request);
 
@@ -48,7 +49,8 @@ public class SecurityFilter extends OncePerRequestFilter {
 				throw new UserNotFoundException("User not valid.");
 			}
 
-			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null, optUser.get().getAuthorities());
+			var authentication = new UsernamePasswordAuthenticationToken(optUser.get(), null,
+					optUser.get().getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
@@ -65,12 +67,18 @@ public class SecurityFilter extends OncePerRequestFilter {
 	}
 
 	private boolean isAllowedPath(ServletRequest request) {
-	    String path = ((HttpServletRequest) request).getRequestURI();
-	    return "/auth/login".equals(path) || path.contains("/ws") || "/user".equals(path) || path.contains("/translation" );
+		String path = ((HttpServletRequest) request).getRequestURI();
+		return "/auth/login".equals(path) 
+				|| "/swagger-ui/**".equals(path) 
+				|| "/v3/api-docs/**".equals(path)
+				|| "/swagger-ui.html".equals(path) 
+				|| path.contains("/ws") 
+				|| "/user".equals(path)
+				|| path.contains("/translation");
 	}
 
 	private boolean isAllowedMethod(ServletRequest request) {
-	    String method = ((HttpServletRequest) request).getMethod();
-	    return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method);
+		String method = ((HttpServletRequest) request).getMethod();
+		return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method);
 	}
 }

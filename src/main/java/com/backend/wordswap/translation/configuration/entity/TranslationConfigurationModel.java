@@ -31,7 +31,7 @@ public class TranslationConfigurationModel extends GenericModel {
 	@JoinColumn(name = "conversation_id")
 	private ConversationModel conversation;
 
-	@Column(name = "target_language")
+	@Column(name = "target_language", nullable = true)
 	private String targetLanguage;
 
 	@Column(name = "is_active")
