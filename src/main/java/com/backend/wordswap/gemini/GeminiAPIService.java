@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.backend.wordswap.chat.ChatResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -21,7 +20,7 @@ public class GeminiAPIService {
 	private RestTemplate restTemplate;
 
 	@Retry(name = "geminiService", fallbackMethod = "fallbackTranslate")
-	public String translateText(String text, String language) throws Exception {
+	public String translateText(String text, String language, String context) throws Exception {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -31,7 +30,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", GeminiUtils.formatPrompt(text, GeminiConstant.PROMPT_TRANSLATE));
+		partsNode.put("text", GeminiUtils.formatPromptTranslate(text, language, context));
 		contentNode.set("parts", objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();
@@ -43,24 +42,10 @@ public class GeminiAPIService {
 
 		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
 
-		return this.extractTextFromResponse(response.getBody());
+		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
-	public String extractTextFromResponse(String jsonResponse) throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper();
-		ChatResponse chatResponse = objectMapper.readValue(jsonResponse, ChatResponse.class);
-
-		if (chatResponse.getCandidates() != null && chatResponse.getCandidates().length > 0) {
-			ChatResponse.Candidates candidate = chatResponse.getCandidates()[0];
-			if (candidate.getContent() != null && candidate.getContent().getParts().length > 0) {
-				return candidate.getContent().getParts()[0].getText();
-			}
-		}
-
-		return null;
-	}
-
-	public String improveText(String text) throws Exception {
+	public String improveText(String text, String context) throws Exception {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -70,7 +55,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", GeminiUtils.formatPrompt(text, GeminiConstant.PROMPT_IMPROVE));
+		partsNode.put("text", GeminiUtils.formatPromptImprove(context, text));
 		contentNode.set("parts", objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();
@@ -87,7 +72,7 @@ public class GeminiAPIService {
 
 		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
 
-		return this.extractTextFromResponse(response.getBody());
+		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
 	public String validateContent(String content) throws Exception {
@@ -117,7 +102,7 @@ public class GeminiAPIService {
 
 		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, request, String.class);
 
-		return this.extractTextFromResponse(response.getBody());
+		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
 }

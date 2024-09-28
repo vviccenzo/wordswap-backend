@@ -2,6 +2,7 @@ package com.backend.wordswap.message;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -52,22 +53,25 @@ public class MessageService {
 
 		AtomicReference<String> content = new AtomicReference<String>(dto.getContent());
 		if (!CollectionUtils.isEmpty(senderConfigs) || !CollectionUtils.isEmpty(receiverConfigs)) {
-			content = this.processContent(content, receiverConfigs, senderConfigs);
+			content = this.processContent(content, receiverConfigs, senderConfigs, conversation);
 		}
 
 		this.saveMessage(Encrypt.encrypt(content.get()), sender, conversation);
 		this.sendWebSocketUpdate(dto.getSenderId(), dto.getReceiverId());
 	}
 
-	private AtomicReference<String> processContent(AtomicReference<String> content, List<TranslationConfigurationModel> receiverConfigs, List<TranslationConfigurationModel> senderConfigs) throws Exception {
+	private AtomicReference<String> processContent(AtomicReference<String> content, 
+			List<TranslationConfigurationModel> receiverConfigs, List<TranslationConfigurationModel> senderConfigs, ConversationModel conv) throws Exception 
+	{
 	    String validatedContent = this.validateInput(content.get());
+		String lastMessages = conv.getMessages().stream().map(MessageModel::getContent).collect(Collectors.joining("\n"));
 
 	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
 	    TranslationConfigurationModel configImproving = this.getTranslationConfig(senderConfigs, TranslationType.IMPROVING);
 
-	    validatedContent = this.geminiAPIService.validateContent(content.get());
-	    validatedContent = this.improveContentIfActive(configImproving, validatedContent);
-	    validatedContent = this.translateContentIfActive(configReceiver, validatedContent);
+	    validatedContent = this.geminiAPIService.validateContent(validatedContent);
+	    validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
+	    validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
 
 	    content.set(validatedContent);
 
@@ -82,11 +86,10 @@ public class MessageService {
 	    return content;
 	}
 
-	private String improveContentIfActive(TranslationConfigurationModel config, String content) {
-
+	private String improveContentIfActive(TranslationConfigurationModel config, String content, String context) {
 	    if (config != null && Boolean.TRUE.equals(config.getIsActive())) {
 	        try {
-	            return this.geminiAPIService.improveText(content);
+	            return this.geminiAPIService.improveText(content, context);
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
@@ -95,11 +98,10 @@ public class MessageService {
 	    return content;
 	}
 
-	private String translateContentIfActive(TranslationConfigurationModel config, String content) {
-
+	private String translateContentIfActive(TranslationConfigurationModel config, String content, String context) {
 	    if (config != null && Boolean.TRUE.equals(config.getIsActive())) {
 	        try {
-	            return this.geminiAPIService.translateText(content, config.getTargetLanguage());
+	            return this.geminiAPIService.translateText(content, config.getTargetLanguage(), context);
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }

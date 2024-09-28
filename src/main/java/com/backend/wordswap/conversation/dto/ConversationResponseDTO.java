@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.backend.wordswap.message.dto.MessageRecord;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+import com.backend.wordswap.user.dto.UserDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,7 +31,11 @@ public class ConversationResponseDTO {
 
 	private String profilePic;
 
+	private UserDTO userInfo;
+
 	private int totalMessages;
+
+	private Map<Long, TranslationConfigResponseDTO> configsUser;
 
 	private Map<LocalDateTime, String> lastMessage;
 

@@ -22,6 +22,9 @@ import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.dto.MessageContent;
 import com.backend.wordswap.message.dto.MessageRecord;
 import com.backend.wordswap.message.entity.MessageModel;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
+import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.entity.UserModel;
 
 import lombok.experimental.UtilityClass;
@@ -58,8 +61,16 @@ public class ConversationFactory {
 		dto.setSenderCode(conv.getUserInitiator().getUserCode());
 
 		boolean isInitiator = conv.getUserInitiator().getId().equals(userId);
+        Long userInitiator = conv.getUserInitiator().getId();
+        Long userRecipient = conv.getUserRecipient().getId();
 
+        Map<Long, TranslationConfigResponseDTO> configsUser = new HashMap<>();
+        configsUser.put(userInitiator, buildTranslationConfig(userInitiator, conv));
+        configsUser.put(userRecipient, buildTranslationConfig(userRecipient, conv));
+
+        dto.setConfigsUser(configsUser);
 		dto.setProfilePic(getProfilePic(conv, isInitiator));
+		dto.setUserInfo(buildInfo(conv, isInitiator));
 		dto.setConversationName(getConversationName(conv, isInitiator));
 		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
 
@@ -72,10 +83,14 @@ public class ConversationFactory {
 
 		return dto;
 	}
+	
+	private UserDTO buildInfo(ConversationModel conversationModel, boolean isInitiator) {
+		return isInitiator ? new UserDTO(conversationModel.getUserRecipient()) : new UserDTO(conversationModel.getUserInitiator());
+	}
 
 	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
 	    UserModel user = isInitiator ? conversationModel.getUserRecipient() : conversationModel.getUserInitiator();
-	    
+
 	    if (Objects.nonNull(user) && Objects.nonNull(user.getUserProfile()) && Objects.nonNull(user.getUserProfile().getContent())) {
 	        return convertByteArrayToBase64(user.getUserProfile().getContent());
 	    }
@@ -156,4 +171,30 @@ public class ConversationFactory {
 		return msg.stream().max(Comparator.comparing(MessageRecord::getTimeStamp))
 				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
 	}
+
+	private TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
+		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
+
+		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsReceivingTranslation(isActive(conversation, userId, TranslationType.RECEIVING));
+		dto.setIsImprovingText(isActive(conversation, userId, TranslationType.IMPROVING));
+
+		return dto;
+	}
+
+	private boolean isActive(ConversationModel conversation, Long userId, TranslationType type) {
+		return conversation.getTranslationConfigurations().stream()
+				.anyMatch(config -> config.getUser().getId().equals(userId) && config.getType().equals(type)
+						&& config.getIsActive());
+	}
+
+	private String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
+		return conversation.getTranslationConfigurations().stream()
+				.filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
+				.map(trans -> {
+					String[] parts = trans.getTargetLanguage().split(" - ");
+					return parts.length > 1 ? parts[1] : "";
+				}).findFirst().orElse("");
+	}
+
 }

@@ -1,5 +1,8 @@
 package com.backend.wordswap.gemini;
 
+import com.backend.wordswap.chat.ChatResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -9,8 +12,29 @@ public class GeminiUtils {
 		return String.format(constant, text);
 	}
 
+	public static String formatPromptTranslate(String context, String text, String language) {
+		return String.format(GeminiConstant.PROMPT_TRANSLATE, text, language);
+	}
+
+	public static String formatPromptImprove(String context, String text) {
+		return String.format(GeminiConstant.PROMPT_IMPROVE, text, context);
+	}
+
 	public static String fallbackTranslate(String content, String targetLanguage, Throwable t) {
 		return "Tradução temporariamente indisponível";
 	}
 
+	public static String extractTextFromResponse(String jsonResponse) throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
+		ChatResponse chatResponse = objectMapper.readValue(jsonResponse, ChatResponse.class);
+
+		if (chatResponse.getCandidates() != null && chatResponse.getCandidates().length > 0) {
+			ChatResponse.Candidates candidate = chatResponse.getCandidates()[0];
+			if (candidate.getContent() != null && candidate.getContent().getParts().length > 0) {
+				return candidate.getContent().getParts()[0].getText();
+			}
+		}
+
+		return null;
+	}
 }
