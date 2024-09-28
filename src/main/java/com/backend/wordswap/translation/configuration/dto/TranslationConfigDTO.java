@@ -1,4 +1,4 @@
-package com.backend.wordswap.translation.configuration;
+package com.backend.wordswap.translation.configuration.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

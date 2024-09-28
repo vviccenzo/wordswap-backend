@@ -20,8 +20,7 @@ public class Encrypt {
 
 	private static final String AES_ECB = "AES/ECB/PKCS5Padding";
 
-	public static String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException,
-			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public static String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		byte[] secretKeyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
 
 		SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "AES");

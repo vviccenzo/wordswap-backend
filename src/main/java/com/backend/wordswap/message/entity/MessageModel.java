@@ -1,16 +1,20 @@
 package com.backend.wordswap.message.entity;
 
+import java.time.LocalDateTime;
+
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
-import com.backend.wordswap.translation.entity.TranslationModel;
 import com.backend.wordswap.user.entity.UserModel;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -28,9 +32,6 @@ public class MessageModel extends GenericModel {
 	@JoinColumn(name = "sender_id")
 	private UserModel sender;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	private TranslationModel translation;
-
 	@Column(name = "content")
 	private String content;
 
@@ -42,6 +43,9 @@ public class MessageModel extends GenericModel {
 
 	@Column(name = "is_deleted")
 	private Boolean isDeleted;
+
+	@Column(name = "is_translated")
+	private Boolean isTranslated;
 
 	public MessageModel(String content, UserModel sender, ConversationModel conversation) {
 		this.content = content;

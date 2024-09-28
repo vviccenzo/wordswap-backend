@@ -1,6 +1,7 @@
 package com.backend.wordswap.translation.configuration;
 
 import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;

@@ -7,6 +7,8 @@ import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;
 import com.backend.wordswap.user.factory.UserFactory;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,13 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class UserService {
 
 	private final UserRepository userRepository;
-
-	public UserService(UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
 
 	public List<UserResponseDTO> findAll() {
 		return userRepository.findAll().stream()

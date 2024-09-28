@@ -1,14 +1,13 @@
 package com.backend.wordswap.conversation;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,21 +26,15 @@ import com.backend.wordswap.user.entity.UserModel;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class ConversationService {
 
-	private UserRepository userRepository;
-
-	private ConversationRepository conversationRepository;
-
-	private MessageRepository messageRepository;
-
-	public ConversationService(UserRepository userRepository, ConversationRepository conversationRepository, MessageRepository messageRepository) {
-		this.userRepository = userRepository;
-		this.conversationRepository = conversationRepository;
-		this.messageRepository = messageRepository;
-	}
+	private final UserRepository userRepository;
+	private final ConversationRepository conversationRepository;
+	private final MessageRepository messageRepository;
 
 	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId, Integer pageNumber) {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
@@ -50,59 +43,35 @@ public class ConversationService {
 		Pageable pageable = PageRequest.of(pageNumber, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
 		Map<Long, Long> totalMessagesByConversation = this.getTotalMessagesByConversation(conversationIds);
 		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds, pageable);
-		List<ConversationResponseDTO> conversationResponseDTOS = this.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
+		List<ConversationResponseDTO> conversationResponseDTOS = ConversationFactory.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
 
 		return conversationResponseDTOS;
 	}
-	
-	public Map<Long, Long> getTotalMessagesByConversation(Set<Long> conversationIds) {
-	    List<Object[]> results = this.messageRepository.findTotalMessagesByConversationIds(conversationIds);
-	    Map<Long, Long> totalMessagesByConversation = new HashMap<>();
-	    
-	    for (Object[] result : results) {
-	        Long conversationId = (Long) result[0];
-	        Long messageCount = (Long) result[1];
 
-	        totalMessagesByConversation.put(conversationId, messageCount);
-	    }
-	    
-	    return totalMessagesByConversation;
+	public Map<Long, Long> getTotalMessagesByConversation(Set<Long> conversationIds) {
+		List<Object[]> results = this.messageRepository.findTotalMessagesByConversationIds(conversationIds);
+		Map<Long, Long> totalMessagesByConversation = new HashMap<>();
+
+		for (Object[] result : results) {
+			Long conversationId = (Long) result[0];
+			Long messageCount = (Long) result[1];
+
+			totalMessagesByConversation.put(conversationId, messageCount);
+		}
+
+		return totalMessagesByConversation;
 	}
 
 	private Set<Long> getAllConversationIds(UserModel user) {
-		Set<Long> conversationIds = user.getInitiatedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet());
-
-		conversationIds.addAll(user.getReceivedConversations().stream().map(ConversationModel::getId).collect(Collectors.toSet()));
-
-		return conversationIds;
+	    return Stream.concat(
+	                user.getInitiatedConversations().stream().map(ConversationModel::getId),
+	                user.getReceivedConversations().stream().map(ConversationModel::getId)
+	           ).collect(Collectors.toSet());
 	}
 
 	private Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
-		Map<Long, List<MessageModel>> messageGrouped = new HashMap<>();
-		
-		conversationIds.forEach(convId -> messageGrouped.put(convId, this.messageRepository.findAllByConversationId(convId, pageable)));
-		
-		return messageGrouped;
-	}
-
-	private List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId, Map<Long, Long> totalMessagesByConversation) {
-		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
-		user.getInitiatedConversations().stream().filter(conversation -> !conversation.getIsDeletedInitiator())
-				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
-				.forEach(conversationResponseDTOS::add);
-
-		user.getReceivedConversations().stream().filter(conversation -> !conversation.getIsDeletedRecipient())
-				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
-				.forEach(conversationResponseDTOS::add);
-
-	    conversationResponseDTOS.sort((c1, c2) -> {
-	        LocalDateTime lastMessageC1 = c1.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
-	        LocalDateTime lastMessageC2 = c2.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
-
-	        return lastMessageC2.compareTo(lastMessageC1);
-	    });
-
-		return conversationResponseDTOS;
+		return this.messageRepository.findAllByConversationIdIn(conversationIds, pageable).stream()
+				.collect(Collectors.groupingBy(msg -> msg.getConversation().getId()));
 	}
 
 	@Transactional

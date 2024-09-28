@@ -16,6 +16,4 @@ public interface MessageRepository extends JpaRepository<MessageModel, Long> {
 	@Query("SELECT m.conversation.id, COUNT(m) FROM MessageModel m WHERE m.conversation.id IN :conversationIds GROUP BY m.conversation.id")
 	List<Object[]> findTotalMessagesByConversationIds(Set<Long> conversationIds);
 
-	List<MessageModel> findAllByConversationId(Long convId, Pageable pageable);
-
 }
