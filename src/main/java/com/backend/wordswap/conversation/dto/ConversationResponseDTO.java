@@ -31,6 +31,10 @@ public class ConversationResponseDTO {
 
 	private String profilePic;
 
+	private Boolean isArchivedInitiator;
+
+	private Boolean isArchivedRecipient;
+
 	private UserDTO userInfo;
 
 	private int totalMessages;
