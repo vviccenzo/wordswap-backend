@@ -8,9 +8,9 @@ import jakarta.persistence.EntityNotFoundException;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
-import com.backend.wordswap.translation.configuration.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 
@@ -58,9 +58,7 @@ public class TranslationConfigurationServiceTest {
 		TranslationConfigDTO dto = new TranslationConfigDTO();
 		dto.setUserId(1L);
 		dto.setConversationId(1L);
-		dto.setSendingTranslation("en-US");
 		dto.setReceivingTranslation("pt-BR");
-		dto.setIsSendingTranslation(true);
 		dto.setIsReceivingTranslation(true);
 
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -72,9 +70,7 @@ public class TranslationConfigurationServiceTest {
 		verify(translationConfigurationRepository).deleteAllByUserIdAndConversationId(1L, 1L);
 
 		assertNotNull(response);
-		assertTrue(response.getIsSendingTranslation());
 		assertTrue(response.getIsReceivingTranslation());
-		assertEquals("en-US", response.getSendingTranslation());
 		assertEquals("pt-BR", response.getReceivingTranslation());
 	}
 

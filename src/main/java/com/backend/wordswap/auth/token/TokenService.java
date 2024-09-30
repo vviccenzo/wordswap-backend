@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth;
+package com.backend.wordswap.auth.token;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -22,8 +22,7 @@ public class TokenService {
 	public String generateToken(UserModel user) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(secret);
-			return JWT.create().withIssuer("auth-api").withSubject(user.getUsername())
-					.withExpiresAt(genExpirationDate()).sign(algorithm);
+			return JWT.create().withIssuer("auth-api").withSubject(user.getUsername()).withExpiresAt(this.genExpirationDate()).sign(algorithm);
 		} catch (JWTCreationException exception) {
 			throw new RuntimeException("Error while generating token", exception);
 		}

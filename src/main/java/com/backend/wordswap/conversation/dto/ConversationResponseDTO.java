@@ -1,14 +1,16 @@
 package com.backend.wordswap.conversation.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.backend.wordswap.message.dto.MessageRecord;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+import com.backend.wordswap.user.dto.UserDTO;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -21,9 +23,15 @@ public class ConversationResponseDTO {
 
 	private Long receiverId;
 
+	private String senderCode;
+
+	private String receiverCode;
+
 	private String conversationName;
 
 	private String profilePic;
+
+	private UserDTO userInfo;
 
 	private int totalMessages;
 

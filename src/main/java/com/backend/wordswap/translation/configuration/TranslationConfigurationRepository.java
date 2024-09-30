@@ -14,4 +14,6 @@ public interface TranslationConfigurationRepository extends JpaRepository<Transl
 	@Modifying
 	void deleteAllByUserIdAndConversationId(Long userId, Long conversationId);
 
+	List<TranslationConfigurationModel> findAllByConversationIdAndUserId(Long conversationId, Long receiverId);
+
 }

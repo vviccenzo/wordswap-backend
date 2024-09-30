@@ -1,8 +1,7 @@
-package com.backend.wordswap.conversation.dto;
+package com.backend.wordswap.message.dto;
 
 import java.time.LocalDateTime;
 
-import com.backend.wordswap.message.dto.MessageContent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 

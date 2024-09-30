@@ -18,14 +18,14 @@ public class UserController {
 		this.userService = userService;
 	}
 
-	@GetMapping(path = "/find-all", produces = MediaType.APPLICATION_JSON_VALUE)
-	public List<UserResponseDTO> findAll() {
-		return this.userService.findAll();
-	}
-
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public UserDTO save(@RequestParam("username") String username, @RequestParam("password") String password,
-			@RequestParam("email") String email, @RequestParam(name = "file", required = false) MultipartFile file, @RequestParam("name") String name) throws IOException {
+	public UserDTO save(
+			@RequestParam(name = "username") String username, 
+			@RequestParam(name = "password") String password,
+			@RequestParam(name = "email") String email, 
+			@RequestParam(name = "file", required = false) MultipartFile file, 
+			@RequestParam(name = "name") String name) throws IOException 
+	{
 		return this.userService.save(new UserCreateDTO(name, email, username, password, file));
 	}
 

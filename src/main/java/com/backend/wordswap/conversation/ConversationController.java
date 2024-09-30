@@ -1,12 +1,7 @@
 package com.backend.wordswap.conversation;
 
-import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
-import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.translation.configuration.TranslationConfigDTO;
-import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
-import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,17 +10,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
+import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigDTO;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
+
+import lombok.AllArgsConstructor;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/conversation")
 public class ConversationController {
 
-	@Autowired
-	private ConversationService conversationService;
+	private final ConversationService conversationService;
 
-	@Autowired
-	private TranslationConfigurationService translationConfigurationService;
+	private final TranslationConfigurationService translationConfigurationService;
 
 	@GetMapping(path = "/load-conversations", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ConversationResponseDTO> findAllConversationByUserId(@RequestParam("userId") Long userId) {

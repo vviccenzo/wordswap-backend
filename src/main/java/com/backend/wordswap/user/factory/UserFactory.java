@@ -24,13 +24,13 @@ public class UserFactory {
 
 	public static UserModel createModelFromDto(UserCreateDTO dto) throws IOException {
 		UserModel model = new UserModel();
+
 		populateUserModel(dto, model);
 
 		return model;
 	}
 
 	public static UserModel updateModelFromDto(UserUpdateDTO dto, UserModel model) {
-
 		try {
 			populateUserModel(dto, model);
 		} catch (IOException e) {
@@ -41,15 +41,27 @@ public class UserFactory {
 	}
 
 	public static List<UserDTO> buildList(List<UserModel> users, Long currentUserId) {
-		return users.stream().map(model -> new UserDTO(model.getId(), model.getUsername(), model.getCreationDate(),
-				findConversationId(model, currentUserId), getProfilePic(model), getBio(model))).toList();
+		return users.stream().map(user -> mapToUserDTO(user, currentUserId)).toList();
 	}
 
-	private static Long findConversationId(UserModel model, Long currentUserId) {
-		return model.getInitiatedConversations().stream()
+	private static UserDTO mapToUserDTO(UserModel user, Long currentUserId) {
+		UserDTO userDTO = new UserDTO();
+		userDTO.setId(user.getId());
+		userDTO.setLabel(user.getName());
+		userDTO.setCreatedDate(user.getCreationDate());
+		userDTO.setConversationId(findConversationId(user, currentUserId));
+		userDTO.setProfilePic(getProfilePic(user));
+		userDTO.setBio(getBio(user));
+		userDTO.setUserCode(user.getUserCode());
+
+		return userDTO;
+	}
+
+	private static Long findConversationId(UserModel user, Long currentUserId) {
+		return user.getInitiatedConversations().stream()
 				.filter(conversation -> conversation.getUserRecipient().getId().equals(currentUserId))
 				.map(ConversationModel::getId).findFirst()
-				.orElseGet(() -> model.getReceivedConversations().stream()
+				.orElseGet(() -> user.getReceivedConversations().stream()
 						.filter(conversation -> conversation.getUserInitiator().getId().equals(currentUserId))
 						.map(ConversationModel::getId).findFirst().orElse(null));
 	}
@@ -69,18 +81,28 @@ public class UserFactory {
 
 	private static void populateUserModel(Object dto, UserModel model) throws IOException {
 		if (dto instanceof UserCreateDTO userCreateDTO) {
-			model.setUsername(userCreateDTO.getUsername());
-			model.setEmail(userCreateDTO.getEmail());
-			model.setPassword(BCryptUtil.encryptPassword(userCreateDTO.getPassword()));
-			model.setCreationDate(LocalDate.now());
-			model.setRole(UserRole.USER);
-			model.setName(userCreateDTO.getName());
-			handleProfilePic(userCreateDTO.getFile(), model);
+			populateUserCreateData(userCreateDTO, model);
 		} else if (dto instanceof UserUpdateDTO userUpdateDTO) {
-			model.setName(userUpdateDTO.getName());
-			model.setBio(userUpdateDTO.getBio());
-			handleProfilePic(userUpdateDTO.getFile(), model);
+			populateUserUpdateData(userUpdateDTO, model);
 		}
+	}
+
+	private static void populateUserCreateData(UserCreateDTO dto, UserModel model) throws IOException {
+		model.setUsername(dto.getUsername());
+		model.setEmail(dto.getEmail());
+		model.setPassword(BCryptUtil.encryptPassword(dto.getPassword()));
+		model.setCreationDate(LocalDate.now());
+		model.setRole(UserRole.USER);
+		model.setName(dto.getName());
+
+		handleProfilePic(dto.getFile(), model);
+	}
+
+	private static void populateUserUpdateData(UserUpdateDTO dto, UserModel model) throws IOException {
+		model.setName(dto.getName());
+		model.setBio(dto.getBio());
+
+		handleProfilePic(dto.getFile(), model);
 	}
 
 	private static void handleProfilePic(MultipartFile file, UserModel model) throws IOException {

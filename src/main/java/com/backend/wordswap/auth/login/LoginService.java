@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.backend.wordswap.auth.TokenService;
 import com.backend.wordswap.auth.dto.AuthDTO;
+import com.backend.wordswap.auth.token.TokenService;
 import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.dto.UserInfoDTO;
@@ -44,7 +44,7 @@ public class LoginService {
 		byte[] profilePic = Objects.nonNull(userModel.getUserProfile()) ? userModel.getUserProfile().getContent()
 				: null;
 		UserInfoDTO userInfo = new UserInfoDTO(userModel.getId(), profilePic, userModel.getName(),
-				StringUtils.isNotBlank(userModel.getBio()) ? userModel.getBio() : "");
+				StringUtils.isNotBlank(userModel.getBio()) ? userModel.getBio() : "", userModel.getUserCode());
 
 		return new AuthDTO(token, userInfo);
 	}

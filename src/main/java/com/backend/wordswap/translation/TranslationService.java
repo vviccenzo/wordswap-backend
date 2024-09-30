@@ -2,7 +2,6 @@ package com.backend.wordswap.translation;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.translation.dto.TranslationDTO;
@@ -13,8 +12,7 @@ import com.google.cloud.translate.TranslateOptions;
 @Service
 public class TranslationService {
 
-	@Value("${api.cloud.translate.key}")
-	private static String API_CLOUD_TRANSLATE_KEY;
+	private static String API_CLOUD_TRANSLATE_KEY = "AIzaSyCUCR4B54R1EjRcKffaVqOgUAdiiphAlS4";
 
 	@SuppressWarnings("deprecation")
 	public List<TranslationDTO> findOptionsTranslation() {

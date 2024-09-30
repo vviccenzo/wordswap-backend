@@ -1,11 +1,10 @@
 package com.backend.wordswap.translation.configuration;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.translation.configuration.dto.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
@@ -26,41 +25,40 @@ public class TranslationConfigurationService {
 
 	private final TranslationConfigurationRepository translationConfigurationRepository;
 
-	public TranslationConfigurationService(TranslationConfigurationRepository translationConfigRepository,
-			UserRepository userRepository, ConversationRepository convRepository) {
+	public TranslationConfigurationService(TranslationConfigurationRepository translationConfigRepository, UserRepository userRepository, ConversationRepository convRepository) {
 		this.translationConfigurationRepository = translationConfigRepository;
 		this.userRepository = userRepository;
 		this.convRepository = convRepository;
 	}
 
 	public TranslationConfigResponseDTO configurateTranslation(TranslationConfigDTO dto) {
-		Optional<UserModel> optUser = this.userRepository.findById(dto.getUserId());
-		if (optUser.isEmpty()) {
-			throw new UserNotFoundException("Usuário não encontrado com o id: " + dto.getUserId());
-		}
+		UserModel user = this.findUserById(dto.getUserId());
+		ConversationModel conversation = this.findConversationById(dto.getConversationId());
 
-		Optional<ConversationModel> optConv = this.convRepository.findById(dto.getConversationId());
-		if (optConv.isEmpty()) {
-			throw new EntityNotFoundException("Conversa não encontrada com o id: " + dto.getConversationId());
-		}
+		this.clearPreviousConfigurations(dto.getUserId(), dto.getConversationId());
+		this.saveTranslationConfiguration(conversation, user, TranslationType.RECEIVING, dto.getReceivingTranslation(), dto.getIsReceivingTranslation());
+		this.saveTranslationConfiguration(conversation, user, TranslationType.IMPROVING, null, dto.getIsImprovingText());
 
-		this.translationConfigurationRepository.deleteAllByUserIdAndConversationId(dto.getUserId(), dto.getConversationId());
-
-		TranslationConfigurationModel configReceiving = new TranslationConfigurationModel();
-		configReceiving.setConversation(optConv.get());
-		configReceiving.setUser(optUser.get());
-		configReceiving.setType(TranslationType.RECEIVING);
-		configReceiving.setTargetLanguage(dto.getReceivingTranslation());
-		configReceiving.setIsActive(dto.getIsReceivingTranslation());
-
-		this.translationConfigurationRepository.save(configReceiving);
-
-		TranslationConfigResponseDTO config = new TranslationConfigResponseDTO();
-		config.setIsSendingTranslation(dto.getIsSendingTranslation());
-		config.setIsReceivingTranslation(dto.getIsReceivingTranslation());
-		config.setSendingTranslation(dto.getSendingTranslation());
-		config.setReceivingTranslation(dto.getReceivingTranslation());
-
-		return config;
+		return TranslationConfigFactory.buildTranslationConfigResponse(dto);
 	}
+
+	private UserModel findUserById(Long userId) {
+		return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com o id: " + userId));
+	}
+
+	private ConversationModel findConversationById(Long conversationId) {
+		return this.convRepository.findById(conversationId).orElseThrow(() -> new EntityNotFoundException("Conversa não encontrada com o id: " + conversationId));
+	}
+
+	private void clearPreviousConfigurations(Long userId, Long conversationId) {
+		this.translationConfigurationRepository.deleteAllByUserIdAndConversationId(userId, conversationId);
+	}
+
+	private void saveTranslationConfiguration(ConversationModel conversation, UserModel user, TranslationType type, String targetLanguage, Boolean isTranslationEnabled) {
+		if (isTranslationEnabled != null && isTranslationEnabled) {
+			TranslationConfigurationModel config = TranslationConfigFactory.createTranslationConfig(conversation, user, type, targetLanguage, isTranslationEnabled);
+			this.translationConfigurationRepository.save(config);
+		}
+	}
+
 }
