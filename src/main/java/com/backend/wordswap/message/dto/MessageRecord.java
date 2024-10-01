@@ -16,13 +16,15 @@ public class MessageRecord {
 
 	private Long id;
 
+	private Long senderId;
+
 	private String content;
 
 	private String sender;
 
-	private LocalDateTime timeStamp;
+	private String image;
 
-	private Long senderId;
+	private LocalDateTime timeStamp;
 
 	private boolean isEdited;
 

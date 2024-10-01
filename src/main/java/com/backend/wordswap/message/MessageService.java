@@ -1,5 +1,8 @@
 package com.backend.wordswap.message;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -56,7 +59,7 @@ public class MessageService {
 			content = this.processContent(content, receiverConfigs, senderConfigs, conversation);
 		}
 
-		this.saveMessage(Encrypt.encrypt(content.get()), sender, conversation);
+		this.saveMessage(Encrypt.encrypt(content.get()), sender, conversation, dto);
 		this.sendWebSocketUpdate(dto.getSenderId(), dto.getReceiverId());
 	}
 
@@ -121,8 +124,15 @@ public class MessageService {
 				.orElse(null);
 	}
 
-    private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation) {
+    private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation, MessageCreateDTO dto) throws IOException {
         MessageModel message = new MessageModel(encryptedContent, sender, conversation);
+
+        if (dto.getImageContent() != null) {
+        	byte[] imageContent = Base64.getDecoder().decode(dto.getImageContent());
+            MessageImageModel image = new MessageImageModel(message, imageContent, dto.getImageFileName(), LocalDate.now());
+            message.setImage(image);
+        }
+
         this.messageRepository.save(message);
     }
 
