@@ -75,7 +75,7 @@ public class ConversationFactory {
 		dto.setUserInfo(buildInfo(conv, isInitiator));
 		dto.setConversationName(getConversationName(conv, isInitiator));
 		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
-
+		
 		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
 		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
 
@@ -125,6 +125,7 @@ public class ConversationFactory {
 		try {
 			String decryptedContent = Encrypt.decrypt(msg.getContent());
 			MessageContent messageContent = new MessageContent(decryptedContent, decryptedContent);
+			String image = msg.getImage() != null && msg.getImage().getContent() != null ? Base64.getEncoder().encodeToString(msg.getImage().getContent()) : "";
 
 			return MessageRecord.builder()
 					.id(msg.getId())
@@ -134,6 +135,7 @@ public class ConversationFactory {
 					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
 					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
 					.messageContent(messageContent)
+					.image(image)
 					.build();
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
 				| BadPaddingException e) {

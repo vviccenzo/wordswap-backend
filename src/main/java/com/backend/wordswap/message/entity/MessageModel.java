@@ -4,12 +4,15 @@ import java.time.LocalDateTime;
 
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
+import com.backend.wordswap.message.MessageImageModel;
 import com.backend.wordswap.user.entity.UserModel;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,6 +34,9 @@ public class MessageModel extends GenericModel {
 	@ManyToOne
 	@JoinColumn(name = "sender_id")
 	private UserModel sender;
+
+    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL)
+    private MessageImageModel image;
 
 	@Column(name = "content")
 	private String content;
