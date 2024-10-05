@@ -13,11 +13,11 @@ public class GeminiUtils {
 	}
 
 	public static String formatPromptTranslate(String context, String text, String language) {
-		return String.format(GeminiConstant.PROMPT_TRANSLATE, text, language);
+		return String.format(GeminiConstant.PROMPT_TRANSLATE, context, text, language);
 	}
 
 	public static String formatPromptImprove(String context, String text) {
-		return String.format(GeminiConstant.PROMPT_IMPROVE, text, context);
+		return String.format(GeminiConstant.PROMPT_IMPROVE, context, text);
 	}
 
 	public static String fallbackTranslate(String content, String targetLanguage, Throwable t) {

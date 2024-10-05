@@ -32,7 +32,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
 		if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
@@ -66,18 +66,22 @@ public class SecurityFilter extends OncePerRequestFilter {
 		return null;
 	}
 
-	private boolean isAllowedPath(ServletRequest request) {
-		String path = ((HttpServletRequest) request).getRequestURI();
-		return "/auth/login".equals(path) 
-				|| "/swagger-ui/**".equals(path) 
-				|| "/v3/api-docs/**".equals(path)
-				|| "/swagger-ui.html".equals(path) 
-				|| path.contains("/ws") 
-				|| "/user".equals(path)
-				|| path.contains("/translation");
+	public boolean isAllowedPath(ServletRequest request) {
+	    String path = ((HttpServletRequest) request).getRequestURI();
+	    if (path == null) {
+	        return false;
+	    }
+
+	    return "/auth/login".equals(path) 
+	            || "/swagger-ui/**".equals(path) 
+	            || "/v3/api-docs/**".equals(path)
+	            || "/swagger-ui.html".equals(path) 
+	            || path.contains("/ws") 
+	            || "/user".equals(path)
+	            || path.contains("/translation");
 	}
 
-	private boolean isAllowedMethod(ServletRequest request) {
+	public boolean isAllowedMethod(ServletRequest request) {
 		String method = ((HttpServletRequest) request).getMethod();
 		return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method);
 	}

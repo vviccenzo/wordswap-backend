@@ -81,7 +81,7 @@ public class MessageService {
 	    return content;
 	}
 
-	private String validateInput(String content) {
+	public String validateInput(String content) {
 	    if (StringUtils.isBlank(content)) {
 	        throw new IllegalArgumentException("Conteúdo não pode ser vazio.");
 	    }
@@ -89,7 +89,7 @@ public class MessageService {
 	    return content;
 	}
 
-	private String improveContentIfActive(TranslationConfigurationModel config, String content, String context) {
+	public String improveContentIfActive(TranslationConfigurationModel config, String content, String context) {
 	    if (config != null && Boolean.TRUE.equals(config.getIsActive())) {
 	        try {
 	            return this.geminiAPIService.improveText(content, context);
@@ -101,7 +101,7 @@ public class MessageService {
 	    return content;
 	}
 
-	private String translateContentIfActive(TranslationConfigurationModel config, String content, String context) {
+	public String translateContentIfActive(TranslationConfigurationModel config, String content, String context) {
 	    if (config != null && Boolean.TRUE.equals(config.getIsActive())) {
 	        try {
 	            return this.geminiAPIService.translateText(content, config.getTargetLanguage(), context);
