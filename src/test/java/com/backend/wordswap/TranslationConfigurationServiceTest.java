@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -50,6 +51,8 @@ public class TranslationConfigurationServiceTest {
 
 		conversation = new ConversationModel();
 		conversation.setId(1L);
+		
+		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
