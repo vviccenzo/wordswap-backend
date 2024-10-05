@@ -12,7 +12,7 @@ import com.google.cloud.translate.TranslateOptions;
 @Service
 public class TranslationService {
 
-	private static String API_CLOUD_TRANSLATE_KEY = "AIzaSyCUCR4B54R1EjRcKffaVqOgUAdiiphAlS4";
+	private static String API_CLOUD_TRANSLATE_KEY = "AIzaSyAoV9WJI2TyzWGSSfoOuU-tGoHdRBwUE60";
 
 	@SuppressWarnings("deprecation")
 	public List<TranslationDTO> findOptionsTranslation() {
@@ -20,13 +20,6 @@ public class TranslationService {
 
 		return translate.listSupportedLanguages(LanguageListOption.targetLanguage("pt-BR")).stream()
 				.map(language -> new TranslationDTO(language.getName(), language.getCode())).toList();
-	}
-
-	@SuppressWarnings("deprecation")
-	public String detectLanguage(String text) {
-		Translate translate = TranslateOptions.newBuilder().setApiKey(API_CLOUD_TRANSLATE_KEY).build().getService();
-
-		return translate.detect(text).getLanguage();
 	}
 
 }
