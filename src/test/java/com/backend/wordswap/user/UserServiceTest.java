@@ -1,7 +1,17 @@
-package com.backend.wordswap;
+package com.backend.wordswap.user;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,8 +20,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.backend.wordswap.user.UserRepository;
-import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.dto.UserCreateDTO;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.dto.UserUpdateDTO;
@@ -20,9 +28,6 @@ import com.backend.wordswap.user.exception.UserEmailAlreadyExistsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;
 import com.backend.wordswap.user.factory.UserFactory;
-
-import java.io.IOException;
-import java.util.Optional;
 
 class UserServiceTest {
 

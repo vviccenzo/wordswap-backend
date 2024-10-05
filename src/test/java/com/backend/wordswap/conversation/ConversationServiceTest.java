@@ -1,4 +1,4 @@
-package com.backend.wordswap;
+package com.backend.wordswap.conversation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,8 +27,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.backend.wordswap.conversation.ConversationRepository;
-import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;

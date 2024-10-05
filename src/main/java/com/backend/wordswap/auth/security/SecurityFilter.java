@@ -68,7 +68,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
 	private boolean isAllowedPath(ServletRequest request) {
 		String path = ((HttpServletRequest) request).getRequestURI();
-		return "/auth/login".equals(path) 
+		return path.contains("/auth")
 				|| "/swagger-ui/**".equals(path) 
 				|| "/v3/api-docs/**".equals(path)
 				|| "/swagger-ui.html".equals(path) 
@@ -79,6 +79,6 @@ public class SecurityFilter extends OncePerRequestFilter {
 
 	private boolean isAllowedMethod(ServletRequest request) {
 		String method = ((HttpServletRequest) request).getMethod();
-		return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method);
+		return "POST".equalsIgnoreCase(method) || "GET".equalsIgnoreCase(method) || "OPTIONS".equalsIgnoreCase(method);
 	}
 }

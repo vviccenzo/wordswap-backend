@@ -1,4 +1,4 @@
-package com.backend.wordswap;
+package com.backend.wordswap.friendship;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
