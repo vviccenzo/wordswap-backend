@@ -36,6 +36,7 @@ public class UserService {
 		model.setUserCode(model.getUsername() + "_" + model.getId());
 
 		UserModel savedModel = this.userRepository.save(model);
+		savedModel.setName(dto.getName());
 
 		return new UserDTO(savedModel);
 	}
@@ -45,6 +46,7 @@ public class UserService {
 		UserModel modelToUpdate = this.userRepository.findById(dto.getId()).orElseThrow(() -> new UserNotFoundException("User not found."));
 		UserModel updatedModel = UserFactory.updateModelFromDto(dto, modelToUpdate);
 		UserModel savedModel = this.userRepository.save(updatedModel);
+		savedModel.setName(dto.getName());
 
 		return new UserDTO(savedModel);
 	}

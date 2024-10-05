@@ -13,6 +13,9 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.backend.wordswap.user.entity.UserModel;
 
+import lombok.Data;
+
+@Data
 @Service
 public class TokenService {
 

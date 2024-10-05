@@ -75,7 +75,7 @@ public class UserFactory {
 				.orElse("");
 	}
 
-	private static String convertByteArrayToBase64(byte[] imageBytes) {
+	public static String convertByteArrayToBase64(byte[] imageBytes) {
 		return Base64.getEncoder().encodeToString(imageBytes);
 	}
 
@@ -87,7 +87,7 @@ public class UserFactory {
 		}
 	}
 
-	private static void populateUserCreateData(UserCreateDTO dto, UserModel model) throws IOException {
+	public static void populateUserCreateData(UserCreateDTO dto, UserModel model) throws IOException {
 		model.setUsername(dto.getUsername());
 		model.setEmail(dto.getEmail());
 		model.setPassword(BCryptUtil.encryptPassword(dto.getPassword()));
@@ -98,14 +98,14 @@ public class UserFactory {
 		handleProfilePic(dto.getFile(), model);
 	}
 
-	private static void populateUserUpdateData(UserUpdateDTO dto, UserModel model) throws IOException {
+	public static void populateUserUpdateData(UserUpdateDTO dto, UserModel model) throws IOException {
 		model.setName(dto.getName());
 		model.setBio(dto.getBio());
 
 		handleProfilePic(dto.getFile(), model);
 	}
 
-	private static void handleProfilePic(MultipartFile file, UserModel model) throws IOException {
+	public static void handleProfilePic(MultipartFile file, UserModel model) throws IOException {
 		if (file != null && !file.isEmpty()) {
 			if (model.getUserProfile() != null) {
 				model.getUserProfile().setContent(file.getBytes());
