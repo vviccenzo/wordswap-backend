@@ -103,7 +103,7 @@ public class ConversationFactoryTest {
 
         assertEquals(1, result.getUserMessages().size(), "Expected user messages size to be 1");
         assertEquals("Hello", result.getUserMessages().get(0).getContent(), "Expected message content to be 'Hello'");
-    }
+    } 
 
 	@Test
 	void testGetProfilePic() {
