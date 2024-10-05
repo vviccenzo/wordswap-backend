@@ -24,7 +24,7 @@ import com.backend.wordswap.user.factory.UserFactory;
 import java.io.IOException;
 import java.util.Optional;
 
-class UserServiceTest extends WordswapApplicationTests {
+class UserServiceTest {
 
 	@Mock
 	private UserRepository userRepository;

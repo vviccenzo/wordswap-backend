@@ -42,7 +42,7 @@ import com.backend.wordswap.user.profile.entity.UserProfileModel;
 
 import jakarta.persistence.EntityNotFoundException;
 
-class ConversationServiceTest extends WordswapApplicationTests {
+class ConversationServiceTest {
 
 	@InjectMocks
 	private ConversationService conversationService;

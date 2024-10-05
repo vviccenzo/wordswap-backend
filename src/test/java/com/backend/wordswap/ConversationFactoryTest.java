@@ -29,7 +29,7 @@ import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.user.entity.UserModel;
 
-class ConversationFactoryTest extends WordswapApplicationTests {
+class ConversationFactoryTest {
 
 	private UserModel userInitiator;
 	private UserModel userRecipient;

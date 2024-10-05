@@ -36,7 +36,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.websocket.WebSocketAction;
 
-class FriendshipRequestServiceTest extends WordswapApplicationTests {
+class FriendshipRequestServiceTest {
 
 	@Mock
 	private UserRepository userRepository;

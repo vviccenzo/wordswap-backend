@@ -20,7 +20,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.InvalidCredentialsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 
-class AuthServiceTest extends WordswapApplicationTests {
+class AuthServiceTest {
 
 	@Mock
 	private UserRepository userRepository;

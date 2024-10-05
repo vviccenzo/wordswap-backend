@@ -26,7 +26,7 @@ import com.backend.wordswap.user.exception.UserNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 
-public class TranslationConfigurationServiceTest extends WordswapApplicationTests {
+public class TranslationConfigurationServiceTest {
 
 	@Mock
 	private UserRepository userRepository;

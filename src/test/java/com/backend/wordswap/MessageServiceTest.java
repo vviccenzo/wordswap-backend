@@ -20,7 +20,7 @@ import com.backend.wordswap.user.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
-class MessageServiceTest extends WordswapApplicationTests {
+class MessageServiceTest {
 
 	@Mock
 	private MessageRepository messageRepository;
