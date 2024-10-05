@@ -74,7 +74,7 @@ public class ConversationFactory {
 		dto.setProfilePic(getProfilePic(conv, isInitiator));
 		dto.setUserInfo(buildInfo(conv, isInitiator));
 		dto.setConversationName(getConversationName(conv, isInitiator));
-		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
+		dto.setTotalMessages(totalMessagesByConversation.getOrDefault(conv.getId().intValue(), 0L).intValue());
 		
 		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
 		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
