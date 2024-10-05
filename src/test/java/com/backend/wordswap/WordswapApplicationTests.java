@@ -9,6 +9,6 @@ class WordswapApplicationTests {
 
 	@Test
 	void contextLoads() {
-	}
+	} 
 
 }
