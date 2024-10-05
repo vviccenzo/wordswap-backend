@@ -183,13 +183,15 @@ class FriendshipRequestServiceTest {
 	@Test
 	void testDeleteFriendshipNotFound() {
 		Long userId = 1L;
+		Long friendId = 2L;
 		UserModel user = new UserModel();
 		user.setId(userId);
 
 		when(this.userRepository.findById(userId)).thenReturn(Optional.of(user));
+		
+		FriendshipDeleteRequestDTO dto = new FriendshipDeleteRequestDTO(userId, friendId);
 
-//		assertThrows(UserNotFoundException.class,
-//				() -> this.friendshipRequestService.deleteFriendship(userId, friendId));
+		assertThrows(UserNotFoundException.class, () -> this.friendshipRequestService.deleteFriendship(dto));
 	}
 
 	@Test
