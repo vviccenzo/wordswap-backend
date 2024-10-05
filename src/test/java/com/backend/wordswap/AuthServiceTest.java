@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,7 +20,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.InvalidCredentialsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 
-class AuthServiceTest {
+class AuthServiceTest extends WordswapApplicationTests {
 
 	@Mock
 	private UserRepository userRepository;

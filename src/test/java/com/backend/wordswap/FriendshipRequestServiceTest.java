@@ -1,4 +1,4 @@
-package com.backend.wordswap.friendship;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,7 +36,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.websocket.WebSocketAction;
 
-class FriendshipRequestServiceTest {
+class FriendshipRequestServiceTest extends WordswapApplicationTests {
 
 	@Mock
 	private UserRepository userRepository;

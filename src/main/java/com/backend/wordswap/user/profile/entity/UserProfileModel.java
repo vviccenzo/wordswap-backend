@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 public class UserProfileModel extends GenericModel {
 
 	@OneToOne
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	private UserModel user;
 
 	@Column(name = "content")

@@ -1,4 +1,4 @@
-package com.backend.wordswap.conversation;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,7 +29,7 @@ import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
 import com.backend.wordswap.user.entity.UserModel;
 
-public class ConversationFactoryTest {
+class ConversationFactoryTest extends WordswapApplicationTests {
 
 	private UserModel userInitiator;
 	private UserModel userRecipient;

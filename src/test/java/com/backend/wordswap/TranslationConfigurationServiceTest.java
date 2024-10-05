@@ -1,4 +1,4 @@
-package com.backend.wordswap.translate.configuration;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -11,10 +11,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -28,8 +26,7 @@ import com.backend.wordswap.user.exception.UserNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 
-@ExtendWith(MockitoExtension.class)
-public class TranslationConfigurationServiceTest {
+public class TranslationConfigurationServiceTest extends WordswapApplicationTests {
 
 	@Mock
 	private UserRepository userRepository;
