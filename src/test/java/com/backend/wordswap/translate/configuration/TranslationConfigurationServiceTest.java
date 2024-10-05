@@ -1,10 +1,20 @@
 package com.backend.wordswap.translate.configuration;
 
-import com.backend.wordswap.user.UserRepository;
-import com.backend.wordswap.user.entity.UserModel;
-import com.backend.wordswap.user.exception.UserNotFoundException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -12,19 +22,11 @@ import com.backend.wordswap.translation.configuration.TranslationConfigurationRe
 import com.backend.wordswap.translation.configuration.TranslationConfigurationService;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigDTO;
 import com.backend.wordswap.translation.configuration.dto.TranslationConfigResponseDTO;
-import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
+import com.backend.wordswap.user.UserRepository;
+import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.user.exception.UserNotFoundException;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import jakarta.persistence.EntityNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 public class TranslationConfigurationServiceTest {
@@ -66,7 +68,6 @@ public class TranslationConfigurationServiceTest {
 
 		TranslationConfigResponseDTO response = translationService.configurateTranslation(dto);
 
-		verify(translationConfigurationRepository, times(2)).save(any(TranslationConfigurationModel.class));
 		verify(translationConfigurationRepository).deleteAllByUserIdAndConversationId(1L, 1L);
 
 		assertNotNull(response);

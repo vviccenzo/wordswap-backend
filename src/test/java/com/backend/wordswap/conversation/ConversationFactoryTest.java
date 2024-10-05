@@ -9,7 +9,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -60,9 +58,6 @@ public class ConversationFactoryTest {
         userInitiator.getInitiatedConversations().add(conversation);
         userRecipient.getReceivedConversations().add(conversation);
         
-        Mockito.mockStatic(Encrypt.class);
-        Mockito.when(Encrypt.decrypt(Mockito.anyString())).thenReturn("Hello");
-
         messageByConversation = new HashMap<>();
     }
 
@@ -80,14 +75,14 @@ public class ConversationFactoryTest {
     }
 
     @Test
-    void testBuildMessages() {
+    void testBuildMessages() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         MessageModel message = new MessageModel();
         message.setId(1L);
         message.setSender(userInitiator);
         message.setSentAt(LocalDateTime.now());
 
         String originalMessage = "Hello";
-        String encodedMessage = Base64.getEncoder().encodeToString(originalMessage.getBytes());
+        String encodedMessage = Encrypt.encrypt(originalMessage);
         message.setContent(encodedMessage);
 
         this.messageByConversation.put(conversation.getId(), List.of(message));
