@@ -70,7 +70,7 @@ public class ConversationService {
 	           ).collect(Collectors.toSet());
 	}
 
-	private Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
+	public Map<Long, List<MessageModel>> getMessageGroupedByConversation(Set<Long> conversationIds, Pageable pageable) {
 		return this.messageRepository.findAllByConversationIdIn(conversationIds, pageable).stream()
 				.collect(Collectors.groupingBy(msg -> msg.getConversation().getId()));
 	}

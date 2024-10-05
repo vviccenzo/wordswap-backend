@@ -74,7 +74,7 @@ public class ConversationFactory {
 		dto.setProfilePic(getProfilePic(conv, isInitiator));
 		dto.setUserInfo(buildInfo(conv, isInitiator));
 		dto.setConversationName(getConversationName(conv, isInitiator));
-		dto.setTotalMessages(totalMessagesByConversation.get(conv.getId()).intValue());
+		dto.setTotalMessages(totalMessagesByConversation.getOrDefault(conv.getId(), 0L).intValue());
 		
 		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
 		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
@@ -86,11 +86,11 @@ public class ConversationFactory {
 		return dto;
 	}
 	
-	private UserDTO buildInfo(ConversationModel conversationModel, boolean isInitiator) {
+	public static UserDTO buildInfo(ConversationModel conversationModel, boolean isInitiator) {
 		return isInitiator ? new UserDTO(conversationModel.getUserRecipient()) : new UserDTO(conversationModel.getUserInitiator());
 	}
 
-	private String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
+	public static String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
 	    UserModel user = isInitiator ? conversationModel.getUserRecipient() : conversationModel.getUserInitiator();
 
 	    if (Objects.nonNull(user) && Objects.nonNull(user.getUserProfile()) && Objects.nonNull(user.getUserProfile().getContent())) {
@@ -100,15 +100,15 @@ public class ConversationFactory {
 	    return "";
 	}
 
-	public String convertByteArrayToBase64(byte[] imageBytes) {
+	public static String convertByteArrayToBase64(byte[] imageBytes) {
 		return Base64.getEncoder().encodeToString(imageBytes);
 	}
 
-	private String getConversationName(ConversationModel conv, boolean isInitiator) {
+	public static String getConversationName(ConversationModel conv, boolean isInitiator) {
 		return isInitiator ? conv.getUserRecipient().getName() : conv.getUserInitiator().getName();
 	}
 
-	private List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages, Map<Long, List<MessageModel>> messageByConversation) {
+	public static List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages, Map<Long, List<MessageModel>> messageByConversation) {
 		List<MessageModel> messages = messageByConversation.getOrDefault(conv.getId(), new ArrayList<>());
 		List<MessageRecord> decryptedMessages = new ArrayList<>();
 
@@ -121,7 +121,7 @@ public class ConversationFactory {
 		return decryptedMessages;
 	}
 
-	private MessageRecord decryptMessage(MessageModel msg) {
+	public static MessageRecord decryptMessage(MessageModel msg) {
 		try {
 			String decryptedContent = Encrypt.decrypt(msg.getContent());
 			MessageContent messageContent = new MessageContent(decryptedContent, decryptedContent);
@@ -143,7 +143,7 @@ public class ConversationFactory {
 		}
 	}
 
-	private Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {
+	public static Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {
 		Map.Entry<LocalDateTime, String> lastUserMessage = getLastMessageEntry(user);
 		Map.Entry<LocalDateTime, String> lastTargetUserMessage = getLastMessageEntry(target);
 
@@ -162,7 +162,7 @@ public class ConversationFactory {
 		return createLastMessageMap(lastMessage);
 	}
 
-	private static Map<LocalDateTime, String> createLastMessageMap(Map.Entry<LocalDateTime, String> lastMessage) {
+	public static Map<LocalDateTime, String> createLastMessageMap(Map.Entry<LocalDateTime, String> lastMessage) {
 		Map<LocalDateTime, String> messageMap = new HashMap<>();
 		if (lastMessage != null) {
 			messageMap.put(lastMessage.getKey(), lastMessage.getValue());
@@ -171,12 +171,12 @@ public class ConversationFactory {
 		return messageMap;
 	}
 
-	private Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> msg) {
+	public static Map.Entry<LocalDateTime, String> getLastMessageEntry(List<MessageRecord> msg) {
 		return msg.stream().max(Comparator.comparing(MessageRecord::getTimeStamp))
 				.map(message -> Map.entry(message.getTimeStamp(), message.getContent())).orElse(null);
 	}
 
-	private TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
+	public static TranslationConfigResponseDTO buildTranslationConfig(Long userId, ConversationModel conversation) {
 		TranslationConfigResponseDTO dto = new TranslationConfigResponseDTO();
 
 		dto.setReceivingTranslation(getTranslationTarget(conversation, userId, TranslationType.RECEIVING));
@@ -186,13 +186,13 @@ public class ConversationFactory {
 		return dto;
 	}
 
-	private boolean isActive(ConversationModel conversation, Long userId, TranslationType type) {
+	public static boolean isActive(ConversationModel conversation, Long userId, TranslationType type) {
 		return conversation.getTranslationConfigurations().stream()
 				.anyMatch(config -> config.getUser().getId().equals(userId) && config.getType().equals(type)
 						&& config.getIsActive());
 	}
 
-	private String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
+	public static String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
 		return conversation.getTranslationConfigurations().stream()
 				.filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
 				.map(trans -> {

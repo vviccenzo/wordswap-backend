@@ -21,7 +21,7 @@ import com.backend.wordswap.user.profile.entity.UserProfileModel;
 @ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user")
+@Table(name = "users")
 @EqualsAndHashCode(callSuper = true)
 public class UserModel extends GenericModel {
 

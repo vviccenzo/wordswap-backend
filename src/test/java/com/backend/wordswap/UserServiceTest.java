@@ -1,4 +1,4 @@
-package com.backend.wordswap.user;
+package com.backend.wordswap;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.wordswap.user.UserRepository;
+import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.dto.UserCreateDTO;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.dto.UserUpdateDTO;

@@ -1,8 +1,9 @@
-package com.backend.wordswap.conversation;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -10,20 +11,31 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import com.backend.wordswap.conversation.ConversationRepository;
+import com.backend.wordswap.conversation.ConversationService;
+import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.message.MessageRepository;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
+import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.profile.entity.UserProfileModel;
@@ -231,4 +243,101 @@ class ConversationServiceTest {
 		assert (conversation.getIsDeletedRecipient());
 	}
 
+	@Test
+    void testArchiveConversation_ShouldThrowException_WhenConversationNotFound() {
+        Long conversationId = 1L;
+        Long userId = 1L;
+        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
+
+        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> this.conversationService.archiveConversartion(dto));
+
+        verify(this.conversationRepository, never()).save(any());
+    }
+
+    @Test
+    void testArchiveConversation_ShouldSetArchivedInitiator_WhenUserIsInitiator() {
+        Long conversationId = 1L;
+        Long userId = 1L;
+        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
+
+        UserModel initiator = new UserModel();
+        initiator.setId(userId);
+        UserModel recipient = new UserModel();
+        recipient.setId(2L);
+
+        ConversationModel conversation = new ConversationModel();
+        conversation.setId(conversationId);
+        conversation.setUserInitiator(initiator);
+        conversation.setUserRecipient(recipient);
+
+        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+
+        this.conversationService.archiveConversartion(dto);
+
+        verify(this.conversationRepository, times(1)).save(conversation);
+        assertTrue(conversation.isArchivedInitiator());
+    }
+
+    @Test
+    void testArchiveConversation_ShouldSetArchivedRecipient_WhenUserIsRecipient() {
+        Long conversationId = 1L;
+        Long userId = 2L;
+        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
+
+        UserModel initiator = new UserModel();
+        initiator.setId(1L);
+        UserModel recipient = new UserModel();
+        recipient.setId(userId);
+
+        ConversationModel conversation = new ConversationModel();
+        conversation.setId(conversationId);
+        conversation.setUserInitiator(initiator);
+        conversation.setUserRecipient(recipient);
+
+        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+
+        this.conversationService.archiveConversartion(dto);
+
+        verify(this.conversationRepository, times(1)).save(conversation);
+        assertTrue(conversation.isArchivedRecipient());
+    }
+
+    @Test
+    void testGetTotalMessagesByConversation() {
+        Set<Long> conversationIds = new HashSet<>(Arrays.asList(1L, 2L));
+        List<Object[]> mockResults = new ArrayList<>();
+        mockResults.add(new Object[]{1L, 5L});
+        mockResults.add(new Object[]{2L, 3L});
+
+        when(this.messageRepository.findTotalMessagesByConversationIds(conversationIds)).thenReturn(mockResults);
+
+        Map<Long, Long> result = this.conversationService.getTotalMessagesByConversation(conversationIds);
+
+        assertEquals(2, result.size());
+        assertEquals(5L, result.get(1L));
+        assertEquals(3L, result.get(2L));
+    }
+
+    @Test
+    void testGetMessageGroupedByConversation() {
+        Set<Long> conversationIds = new HashSet<>(Arrays.asList(1L, 2L));
+        MessageModel message1 = new MessageModel();
+        message1.setConversation(new ConversationModel());
+        message1.getConversation().setId(1L);
+        MessageModel message2 = new MessageModel();
+        message2.setConversation(new ConversationModel());
+        message2.getConversation().setId(2L);
+        List<MessageModel> messages = Arrays.asList(message1, message2);
+
+        Pageable pageable = PageRequest.of(0, 30);
+        when(this.messageRepository.findAllByConversationIdIn(conversationIds, pageable)).thenReturn(messages);
+
+        Map<Long, List<MessageModel>> result = this.conversationService.getMessageGroupedByConversation(conversationIds, pageable);
+
+        assertEquals(2, result.size());
+        assertEquals(1L, result.get(1L).get(0).getConversation().getId());
+        assertEquals(2L, result.get(2L).get(0).getConversation().getId());
+    }
 }

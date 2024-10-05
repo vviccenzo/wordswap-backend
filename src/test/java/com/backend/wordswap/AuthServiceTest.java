@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

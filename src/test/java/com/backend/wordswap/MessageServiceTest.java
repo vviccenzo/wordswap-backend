@@ -1,4 +1,4 @@
-package com.backend.wordswap.message;
+package com.backend.wordswap;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.backend.wordswap.conversation.ConversationService;
+import com.backend.wordswap.message.MessageRepository;
+import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.user.UserRepository;
