@@ -18,13 +18,13 @@ public class Encrypt {
 	
 	private static String secretKey = "03gNpJHDjKQzwe4U";
 
-	private static String aesCbc = "AES/CBC/NoPadding";
+    private final String aesEcb = "AES/ECB/PKCS5Padding";
 
 	public static String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		byte[] secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
 
 		SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "AES");
-		Cipher cipher = Cipher.getInstance(aesCbc);
+		Cipher cipher = Cipher.getInstance(aesEcb);
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
 		byte[] encryptedBytes = cipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
@@ -38,7 +38,7 @@ public class Encrypt {
 		byte[] secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
 
 		SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "AES");
-		Cipher cipher = Cipher.getInstance(aesCbc);
+		Cipher cipher = Cipher.getInstance(aesEcb);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
 
 		byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
