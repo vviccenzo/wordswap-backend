@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.backend.wordswap.gemini.exception.GeminiJsonException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -21,7 +22,7 @@ public class GeminiAPIService {
 	private RestTemplate restTemplate;
 
 	@Retry(name = "geminiService", fallbackMethod = "fallbackTranslate")
-	public String translateText(String text, String language, String context) throws Exception {
+	public String translateText(String text, String language, String context) throws JsonProcessingException {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -46,7 +47,7 @@ public class GeminiAPIService {
 		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
-	public String improveText(String text, String context) throws Exception {
+	public String improveText(String text, String context) throws JsonProcessingException {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -76,7 +77,7 @@ public class GeminiAPIService {
 		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
-	public String validateContent(String content) throws Exception {
+	public String validateContent(String content) throws JsonProcessingException {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
 
 		HttpHeaders headers = new HttpHeaders();
