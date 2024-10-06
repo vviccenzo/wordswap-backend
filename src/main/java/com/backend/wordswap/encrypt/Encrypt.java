@@ -11,20 +11,14 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import lombok.experimental.UtilityClass;
 
-@Service
+@UtilityClass
 public class Encrypt {
 	
-	Encrypt() {
-	}
+	private static String secretKey = "03gNpJHDjKQzwe4U";
 
-	@Value("${secret.key}")
-	private static String secretKey;
-
-	@Value("${aes.ecb}")
-	private static String aesEcb;
+	private static String aesEcb = "AES/ECB/PKCS5Padding";
 
 	public static String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		byte[] secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
