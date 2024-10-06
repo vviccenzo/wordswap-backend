@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/message")
 public class MessageController {
 
-	private final MessageService messageService;
+	private MessageService messageService;
 
 	@PostMapping(path = "/get-messages")
 	public ConversationResponseDTO getMessages(@RequestBody MessageRequestDTO dto) {

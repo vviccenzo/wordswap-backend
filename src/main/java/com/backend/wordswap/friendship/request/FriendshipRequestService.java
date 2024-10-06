@@ -21,12 +21,13 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.websocket.WebSocketAction;
 import com.backend.wordswap.websocket.WebSocketResponse;
+import com.backend.wordswap.websocket.WebSocketConstant;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class FriendshipRequestService {
-
+	
 	private final SimpMessagingTemplate messagingTemplate;
 
 	private final UserRepository userRepository;
@@ -35,8 +36,7 @@ public class FriendshipRequestService {
 
 	private final UserService userService;
 
-	public FriendshipRequestService(UserRepository userRepository,
-			FriendshipRequestRepository friendshipRequestRepository, SimpMessagingTemplate messagingTemplate,
+	public FriendshipRequestService(UserRepository userRepository, FriendshipRequestRepository friendshipRequestRepository, SimpMessagingTemplate messagingTemplate,
 			UserService userService) {
 		this.userRepository = userRepository;
 		this.friendshipRequestRepository = friendshipRequestRepository;
@@ -64,14 +64,15 @@ public class FriendshipRequestService {
 		sentModel.setReceiver(optTarget.get());
 		sentModel.setStatus(StatusType.PENDING);
 		sentModel.setRequestDate(LocalDateTime.now());
-		sentModel = this.friendshipRequestRepository.save(sentModel);
+
+		this.friendshipRequestRepository.save(sentModel);
 
 		List<FriendshipDTO> requestsSender = this.findAllByUserId(dto.getSenderId());
 		List<FriendshipDTO> requestsTarget = this.findAllByUserId(optTarget.get().getId());
 
-		this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getSenderId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + dto.getSenderId(),
 				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsSender));
-		this.messagingTemplate.convertAndSend("/topic/messages/" + optTarget.get().getId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + optTarget.get().getId(),
 				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsTarget));
 	}
 
@@ -105,18 +106,18 @@ public class FriendshipRequestService {
 			List<UserDTO> friendsSender = this.userService.findFriendsByUserId(user1.getId());
 			List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user2.getId());
 
-			this.messagingTemplate.convertAndSend("/topic/messages/" + user1.getId(),
+			this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + user1.getId(),
 					new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsSender));
-			this.messagingTemplate.convertAndSend("/topic/messages/" + user2.getId(),
+			this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + user2.getId(),
 					new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsTarget));
 		}
 
 		List<FriendshipDTO> requestsSender = this.findAllByUserId(invite.getSender().getId());
 		List<FriendshipDTO> requestsTarget = this.findAllByUserId(invite.getReceiver().getId());
 
-		this.messagingTemplate.convertAndSend("/topic/messages/" + invite.getSender().getId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + invite.getSender().getId(),
 				new WebSocketResponse<List<FriendshipDTO>>(WebSocketAction.UPDATE_FRIEND_REQUEST, requestsSender));
-		this.messagingTemplate.convertAndSend("/topic/messages/" + invite.getReceiver().getId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + invite.getReceiver().getId(),
 				new WebSocketResponse<List<FriendshipDTO>>(WebSocketAction.UPDATE_FRIEND_REQUEST, requestsTarget));
 	}
 
@@ -138,13 +139,14 @@ public class FriendshipRequestService {
 		List<UserDTO> friendsSender = this.userService.findFriendsByUserId(friend.getId());
 		List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user.getId());
 
-		this.messagingTemplate.convertAndSend("/topic/messages/" + friend.getId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + friend.getId(),
 				new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsSender));
-		this.messagingTemplate.convertAndSend("/topic/messages/" + user.getId(),
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + user.getId(),
 				new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsTarget));
 	}
 
 	public List<FriendshipDTO> findAllByUserId(Long userId) {
-		return this.friendshipRequestRepository.findAllByReceiverIdAndStatus(userId, StatusType.PENDING).stream().map(FriendshipRequestFactory::buildDTO).toList();
+		return this.friendshipRequestRepository.findAllByReceiverIdAndStatus(userId, StatusType.PENDING).stream()
+				.map(FriendshipRequestFactory::buildDTO).toList();
 	}
 }

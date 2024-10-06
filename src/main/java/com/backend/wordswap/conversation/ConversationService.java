@@ -44,9 +44,8 @@ public class ConversationService {
 		Pageable pageable = PageRequest.of(pageNumber, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
 		Map<Long, Long> totalMessagesByConversation = this.getTotalMessagesByConversation(conversationIds);
 		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds, pageable);
-		List<ConversationResponseDTO> conversationResponseDTOS = ConversationFactory.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
 
-		return conversationResponseDTOS;
+		return ConversationFactory.buildConversationsResponse(user, messageByConversation, userId, totalMessagesByConversation);
 	}
 
 	public Map<Long, Long> getTotalMessagesByConversation(Set<Long> conversationIds) {

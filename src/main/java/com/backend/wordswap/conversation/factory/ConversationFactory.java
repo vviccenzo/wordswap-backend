@@ -18,6 +18,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
+import com.backend.wordswap.conversation.exception.ConvervationMessageBuildException;
 import com.backend.wordswap.encrypt.Encrypt;
 import com.backend.wordswap.message.dto.MessageContent;
 import com.backend.wordswap.message.dto.MessageRecord;
@@ -137,9 +138,8 @@ public class ConversationFactory {
 					.messageContent(messageContent)
 					.image(image)
 					.build();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
-			throw new RuntimeException(e);
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			throw new ConvervationMessageBuildException(e);
 		}
 	}
 

@@ -12,7 +12,7 @@ import com.google.cloud.translate.TranslateOptions;
 @Service
 public class TranslationService {
 
-	private static String API_CLOUD_TRANSLATE_KEY = "AIzaSyAoV9WJI2TyzWGSSfoOuU-tGoHdRBwUE60";
+	private static final String API_CLOUD_TRANSLATE_KEY = "AIzaSyAoV9WJI2TyzWGSSfoOuU-tGoHdRBwUE60";
 
 	@SuppressWarnings("deprecation")
 	public List<TranslationDTO> findOptionsTranslation() {
