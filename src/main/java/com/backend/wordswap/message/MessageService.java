@@ -1,11 +1,16 @@
 package com.backend.wordswap.message;
 
-import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -54,9 +59,9 @@ public class MessageService {
 		List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getReceiverId());
 		List<TranslationConfigurationModel> senderConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getSenderId());
 
-		AtomicReference<String> content = new AtomicReference<String>(dto.getContent());
+		AtomicReference<String> content = new AtomicReference<>(dto.getContent());
 		if (!CollectionUtils.isEmpty(senderConfigs) || !CollectionUtils.isEmpty(receiverConfigs)) {
-			content = this.processContent(content, receiverConfigs, senderConfigs, conversation);
+			this.processContent(content, receiverConfigs, senderConfigs, conversation);
 		}
 
 		this.saveMessage(Encrypt.encrypt(content.get()), sender, conversation, dto);
@@ -124,7 +129,7 @@ public class MessageService {
 				.orElse(null);
 	}
 
-    private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation, MessageCreateDTO dto) throws IOException {
+    private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation, MessageCreateDTO dto) {
         MessageModel message = new MessageModel(encryptedContent, sender, conversation);
 
         if (dto.getImageContent() != null) {
@@ -137,7 +142,7 @@ public class MessageService {
     }
 
     @Transactional
-    public void editMessage(MessageEditDTO dto) throws Exception {
+    public void editMessage(MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         MessageModel message = this.getMessageById(dto.getId());
         message.setContent(Encrypt.encrypt(dto.getContent()));
         message.setIsEdited(Boolean.TRUE);

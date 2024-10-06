@@ -14,7 +14,7 @@ public class TranslationConfigFactory {
 
 	public static TranslationConfigurationModel createTranslationConfig(ConversationModel conversation, UserModel user, TranslationType type, String targetLanguage, Boolean isActive) {
 		TranslationConfigurationModel config = new TranslationConfigurationModel();
-		if(isActive) {
+		if(isActive.booleanValue()) {
 			config.setConversation(conversation);
 			config.setUser(user);
 			config.setType(type);

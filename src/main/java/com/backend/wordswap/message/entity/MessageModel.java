@@ -10,6 +10,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -35,7 +36,7 @@ public class MessageModel extends GenericModel {
 	@JoinColumn(name = "sender_id")
 	private UserModel sender;
 
-    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private MessageImageModel image;
 
 	@Column(name = "content")

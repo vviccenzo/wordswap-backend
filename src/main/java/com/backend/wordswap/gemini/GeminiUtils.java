@@ -1,6 +1,7 @@
 package com.backend.wordswap.gemini;
 
 import com.backend.wordswap.chat.ChatResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.experimental.UtilityClass;
@@ -20,11 +21,7 @@ public class GeminiUtils {
 		return String.format(GeminiConstant.PROMPT_IMPROVE, context, text);
 	}
 
-	public static String fallbackTranslate(String content, String targetLanguage, Throwable t) {
-		return "Tradução temporariamente indisponível";
-	}
-
-	public static String extractTextFromResponse(String jsonResponse) throws Exception {
+	public static String extractTextFromResponse(String jsonResponse) throws JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		ChatResponse chatResponse = objectMapper.readValue(jsonResponse, ChatResponse.class);
 

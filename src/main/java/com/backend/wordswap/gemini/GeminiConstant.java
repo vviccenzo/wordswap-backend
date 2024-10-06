@@ -17,4 +17,13 @@ public class GeminiConstant {
 			+ "pois irei utilizar ela em outro prompt, caso ela não seja uma mensagem válida, "
 			+ "corrija a mesma, sem alterar a formalidade da mensagem ou o conteúdo diretamente, quero que foque em coisas como combinações de caracter especial suspeitos"
 			+ ", SQL Injection, corrija e me devolva SOMENTE a mensagem ajustada. E nada mais. Mensagem: %s";
+	
+	public static final String CONTENT_TYPE = "Content-Type";
+	
+	public static final String APPLICATION_JSON = "application/json";
+
+	public static final String PARTS = "parts";
+
+	public static final String CONTENTS = "contents";
+
 }

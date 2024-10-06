@@ -17,12 +17,12 @@ class TokenServiceTest {
 	@InjectMocks
 	private TokenService tokenService;
 
-	private String secret = "aaaaaaaaaa"; // Define diretamente o valor do secret
+	private String secret = "aaaaaaaaaa";
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		tokenService.setSecret(secret); // Método setter para definir o secret
+		tokenService.setSecret(secret);
 	}
 
 	@Test

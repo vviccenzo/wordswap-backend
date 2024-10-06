@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-public class GeminiUtilsTest {
+class GeminiUtilsTest {
 
 	@Test
 	void testFormatPrompt() {
@@ -34,14 +34,6 @@ public class GeminiUtilsTest {
 	    String result = GeminiUtils.formatPromptImprove(context, text);
 	    String expected = "Aqui está o contexto das últimas mensagens: context. Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: Hello!. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a mensagem melhorada e nada mais.";
 	    assertEquals(expected, result);
-	}
-
-	@Test
-	void testFallbackTranslate() {
-		String content = "Some content";
-		Throwable throwable = new RuntimeException("Some error");
-		String result = GeminiUtils.fallbackTranslate(content, "en", throwable);
-		assertEquals("Tradução temporariamente indisponível", result);
 	}
 
 	@Test

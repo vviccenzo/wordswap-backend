@@ -11,21 +11,28 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-import lombok.experimental.UtilityClass;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-@UtilityClass
+@Service
 public class Encrypt {
+	
+	Encrypt() {
+	}
 
-	private static final String SECRET_KEY = "03gNpJHDjKQzwe4U";
+	@Value("${secret.key}")
+	private static String secretKey;
 
-	private static final String AES_ECB = "AES/ECB/PKCS5Padding";
+	@Value("${aes.ecb}")
+	private static String aesEcb;
 
 	public static String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		byte[] secretKeyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+		byte[] secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
 
 		SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "AES");
-		Cipher cipher = Cipher.getInstance(AES_ECB);
+		Cipher cipher = Cipher.getInstance(aesEcb);
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
 		byte[] encryptedBytes = cipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
 
 		return Base64.getEncoder().encodeToString(encryptedBytes);
@@ -34,11 +41,12 @@ public class Encrypt {
 	public static String decrypt(String encryptedMessage) throws NoSuchAlgorithmException, NoSuchPaddingException,
 			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		byte[] encryptedBytes = Base64.getDecoder().decode(encryptedMessage);
-		byte[] secretKeyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+		byte[] secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
 
 		SecretKeySpec secretKey = new SecretKeySpec(secretKeyBytes, "AES");
-		Cipher cipher = Cipher.getInstance(AES_ECB);
+		Cipher cipher = Cipher.getInstance(aesEcb);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
 		byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
 		return new String(decryptedBytes, StandardCharsets.UTF_8);
