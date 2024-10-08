@@ -7,8 +7,6 @@ public class GeminiConstant {
 
 	public static final String API_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=%s";
 
-	public static final String GEMINI_KEY = "AIzaSyB9iyM4KPCLkSOGkVPr2a5GaVtuLJ0KXrw";
-
 	public static final String PROMPT_TRANSLATE = "Aqui está o contexto das últimas mensagens: %s. Agora, preciso que você traduza a seguinte mensagem: %s para o idioma: %s. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a tradução e nada mais.";
 
 	public static final String PROMPT_IMPROVE = "Aqui está o contexto das últimas mensagens: %s. Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: %s. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a mensagem melhorada e nada mais.";

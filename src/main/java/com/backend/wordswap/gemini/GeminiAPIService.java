@@ -1,5 +1,6 @@
 package com.backend.wordswap.gemini;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -13,17 +14,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.github.resilience4j.retry.annotation.Retry;
-import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
 public class GeminiAPIService {
 
 	private RestTemplate restTemplate;
 
+	GeminiAPIService(RestTemplate restTemplate) {
+		this.restTemplate = restTemplate;
+	}
+	
+	@Value("${gemini.key}")
+	public String geminiKey;
+
 	@Retry(name = "geminiService", fallbackMethod = "fallbackTranslate")
 	public String translateText(String text, String language, String context) throws JsonProcessingException {
-		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, geminiKey);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set(GeminiConstant.CONTENT_TYPE, GeminiConstant.APPLICATION_JSON);
@@ -48,7 +54,7 @@ public class GeminiAPIService {
 	}
 
 	public String improveText(String text, String context) throws JsonProcessingException {
-		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, geminiKey);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set(GeminiConstant.CONTENT_TYPE, GeminiConstant.APPLICATION_JSON);
@@ -78,7 +84,7 @@ public class GeminiAPIService {
 	}
 
 	public String validateContent(String content) throws JsonProcessingException {
-		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, GeminiConstant.GEMINI_KEY);
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, geminiKey);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set(GeminiConstant.CONTENT_TYPE, GeminiConstant.APPLICATION_JSON);
