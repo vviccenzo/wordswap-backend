@@ -19,12 +19,12 @@ class GeminiUtilsTest {
 
 	@Test
 	void testFormatPromptTranslate() {
-		String context = "context";
-		String text = "Hello!";
-		String language = "es";
-		String result = GeminiUtils.formatPromptTranslate(context, text, language);
-		String expected = "Aqui está o contexto das últimas mensagens: context. Agora, preciso que você traduza a seguinte mensagem: Hello! para o idioma: es. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a tradução e nada mais.";
-		assertEquals(expected, result);
+	    String context = "context";
+	    String text = "Hello!";
+	    String language = "es";
+	    String result = GeminiUtils.formatPromptTranslate(context, text, language);
+	    String expected = "Aqui está o contexto das últimas mensagens: context. Agora, preciso que você traduza a seguinte mensagem: 'Hello!', para o idioma: es. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a tradução de 'Hello!' e nada mais.";
+	    assertEquals(expected, result);
 	}
 
 	@Test
