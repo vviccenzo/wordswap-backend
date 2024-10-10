@@ -1,0 +1,20 @@
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  endpoint:
+    health:
+      enabled: true
+      show-details: ALWAYS
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+
+resilience4j.circuitbreaker:
+  instances:
+    avalicaoCB:
+      minimunNumberOfCalls: 4
+      slidingWindowSize: 8
