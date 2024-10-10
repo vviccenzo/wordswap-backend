@@ -90,9 +90,20 @@ public class MessageService {
 	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
 	    TranslationConfigurationModel configImproving = this.getTranslationConfig(senderConfigs, TranslationType.IMPROVING);
 
-	    validatedContent = this.geminiAPIService.validateContent(validatedContent);
-	    validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
-	    validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
+		validatedContent = this.geminiAPIService.validateContent(validatedContent);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
+
+		validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
+
+		validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
 
 	    content.set(validatedContent);
 
@@ -135,7 +146,7 @@ public class MessageService {
 		return this.translationConfigRepository.findAllByConversationIdAndUserId(conversationId, receiverId).stream().toList();
 	}
 
-	private TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
+	public TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
 		return configs.stream()
 				.filter(config -> type.equals(config.getType()) && config.getIsActive())
 				.findFirst()
