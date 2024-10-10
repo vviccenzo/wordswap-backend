@@ -194,11 +194,8 @@ public class ConversationFactory {
 
 	public static String getTranslationTarget(ConversationModel conversation, Long userId, TranslationType type) {
 		return conversation.getTranslationConfigurations().stream()
-				.filter(config -> config.getUser().getId().equals(userId) && config.getType().equals(type))
-				.map(trans -> {
-					String[] parts = trans.getTargetLanguage().split(" - ");
-					return parts.length > 1 ? parts[1] : "";
-				}).findFirst().orElse("");
+				.filter(config -> config.getUser().getId().compareTo(userId) == 0 && config.getType().equals(type))
+				.map(trans -> trans.getTargetLanguage()).findFirst().orElse("");
 	}
 
 }

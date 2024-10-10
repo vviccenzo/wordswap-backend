@@ -36,8 +36,8 @@ public class MessageModel extends GenericModel {
 	@JoinColumn(name = "sender_id")
 	private UserModel sender;
 
-    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private MessageImageModel image;
+	@OneToOne(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private MessageImageModel image;
 
 	@Column(name = "content")
 	private String content;

@@ -4,6 +4,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -72,14 +73,37 @@ public class MessageService {
 			List<TranslationConfigurationModel> receiverConfigs, List<TranslationConfigurationModel> senderConfigs, ConversationModel conv) throws Exception 
 	{
 	    String validatedContent = this.validateInput(content.get());
-		String lastMessages = conv.getMessages().stream().map(MessageModel::getContent).collect(Collectors.joining("\n"));
+	    String lastMessages = conv.getMessages().stream()
+	    	    .sorted(Comparator.comparing(MessageModel::getSentAt).reversed())
+	    	    .limit(5)
+	    	    .map(msg -> {
+	    	        try {
+	    	            return Encrypt.decrypt(msg.getContent());
+	    	        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+	    	            e.printStackTrace();
+	    	        }
+
+	    	        return "";
+	    	    })
+	    	    .collect(Collectors.joining(","));
 
 	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
 	    TranslationConfigurationModel configImproving = this.getTranslationConfig(senderConfigs, TranslationType.IMPROVING);
 
-	    validatedContent = this.geminiAPIService.validateContent(validatedContent);
-	    validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
-	    validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
+		validatedContent = this.geminiAPIService.validateContent(validatedContent);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
+
+		validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
+
+		validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
+		if (StringUtils.isBlank(validatedContent)) {
+			validatedContent = content.get();
+		}
 
 	    content.set(validatedContent);
 
@@ -122,7 +146,7 @@ public class MessageService {
 		return this.translationConfigRepository.findAllByConversationIdAndUserId(conversationId, receiverId).stream().toList();
 	}
 
-	private TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
+	public TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
 		return configs.stream()
 				.filter(config -> type.equals(config.getType()) && config.getIsActive())
 				.findFirst()
