@@ -14,7 +14,7 @@ public class GeminiUtils {
 	}
 
 	public static String formatPromptTranslate(String context, String text, String language) {
-		return String.format(GeminiConstant.PROMPT_TRANSLATE, context, text, language);
+		return String.format(GeminiConstant.PROMPT_TRANSLATE, context, text, language, text);
 	}
 
 	public static String formatPromptImprove(String context, String text) {

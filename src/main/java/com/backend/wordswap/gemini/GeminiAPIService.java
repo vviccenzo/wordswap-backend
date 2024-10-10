@@ -38,7 +38,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", GeminiUtils.formatPromptTranslate(text, language, context));
+		partsNode.put("text", GeminiUtils.formatPromptTranslate(context, text, language));
 		contentNode.set(GeminiConstant.PARTS, objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();
