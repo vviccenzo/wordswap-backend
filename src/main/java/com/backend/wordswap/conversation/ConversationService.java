@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
@@ -24,6 +25,8 @@ import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
+import com.backend.wordswap.websocket.WebSocketAction;
+import com.backend.wordswap.websocket.WebSocketResponse;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -36,6 +39,7 @@ public class ConversationService {
 	private final UserRepository userRepository;
 	private final ConversationRepository conversationRepository;
 	private final MessageRepository messageRepository;
+	private final SimpMessagingTemplate messagingTemplate;
 
 	public List<ConversationResponseDTO> findAllConversationByUserId(Long userId, Integer pageNumber) {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
@@ -110,6 +114,10 @@ public class ConversationService {
 		}
 
 		this.conversationRepository.save(conv);
+
+        List<ConversationResponseDTO> convsSender = this.findAllConversationByUserId(dto.getUserId(), 0);
+
+        this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getUserId(), new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convsSender));
 	}
 
 	public void archiveConversartion(ConversartionArchiveDTO dto) {
@@ -129,5 +137,9 @@ public class ConversationService {
 		}
 
 		this.conversationRepository.save(conv);
+
+        List<ConversationResponseDTO> convsSender = this.findAllConversationByUserId(dto.getUserId(), 0);
+
+        this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getUserId(), new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convsSender));
 	}
 }
