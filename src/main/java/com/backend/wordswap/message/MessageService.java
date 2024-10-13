@@ -142,7 +142,7 @@ public class MessageService {
 	    return content;
 	}
 
-	private List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
+	public List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
 		return this.translationConfigRepository.findAllByConversationIdAndUserId(conversationId, receiverId).stream().toList();
 	}
 
@@ -210,7 +210,7 @@ public class MessageService {
         return this.messageRepository.findById(messageId).orElseThrow(() -> new EntityNotFoundException("Message not found."));
     }
 
-    private void sendWebSocketUpdate(Long senderId, Long receiverId) {
+    public void sendWebSocketUpdate(Long senderId, Long receiverId) {
         List<ConversationResponseDTO> convsSender = this.conversationService.findAllConversationByUserId(senderId, 0);
         List<ConversationResponseDTO> convsTarget = this.conversationService.findAllConversationByUserId(receiverId, 0);
 

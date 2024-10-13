@@ -138,17 +138,28 @@ class MessageServiceTest {
     @Test
     void testEditMessageSuccessfully() throws Exception {
         MessageModel message = new MessageModel();
-        ConversationModel conv =  new ConversationModel();
+        message.setId(1L);
+        message.setContent(Encrypt.encrypt("Original Content"));
+        message.setIsEdited(false);
+
+        ConversationModel conv = new ConversationModel();
         conv.setUserInitiator(sender);
         conv.setUserRecipient(sender);
-        
-        message.setContent(Encrypt.encrypt("Original Content"));
         message.setConversation(conv);
 
         when(messageRepository.findById(anyLong())).thenReturn(Optional.of(message));
 
+        List<TranslationConfigurationModel> senderConfigs = Collections.emptyList();
+        List<TranslationConfigurationModel> receiverConfigs = Collections.emptyList();
+        when(this.messageService.getReceiverTranslationConfigs(conv.getId(), conv.getUserInitiator().getId()))
+            .thenReturn(senderConfigs);
+        when(this.messageService.getReceiverTranslationConfigs(conv.getId(), conv.getUserRecipient().getId()))
+            .thenReturn(receiverConfigs);
+
         String newContent = "Edited Content";
-        this.messageService.editMessage(new MessageEditDTO(1L, 1L, newContent, 0));
+        MessageEditDTO messageEditDTO = new MessageEditDTO(1L, 1L, newContent, 0);
+
+        this.messageService.editMessage(messageEditDTO);
 
         assertEquals(Encrypt.encrypt(newContent), message.getContent());
         assertTrue(message.getIsEdited());
