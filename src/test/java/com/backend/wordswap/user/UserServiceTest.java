@@ -68,16 +68,33 @@ class UserServiceTest {
 
     @Test
     void testSave() throws IOException {
+        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        userCreateDTO.setUsername("testUser");
+        userCreateDTO.setEmail("testUser@example.com");
+        userCreateDTO.setName("Test User");
+        userCreateDTO.setPassword("validPassword");
+
+        UserModel userModel = new UserModel();
+        userModel.setUsername(userCreateDTO.getUsername());
+        userModel.setEmail(userCreateDTO.getEmail());
+        userModel.setName(userCreateDTO.getName());
+        
         when(userRepository.findByEmail(userCreateDTO.getEmail())).thenReturn(Optional.empty());
         when(userRepository.findByUsername(userCreateDTO.getUsername())).thenReturn(Optional.empty());
-        when(userRepository.save(any(UserModel.class))).thenReturn(userModel);
+        when(userRepository.save(any(UserModel.class))).thenAnswer(invocation -> {
+            UserModel savedUser = invocation.getArgument(0);
+            savedUser.setId(1L);
+            return savedUser;
+        });
 
         UserDTO savedUser = this.userService.save(userCreateDTO);
 
         assertNotNull(savedUser);
-        assertEquals("testUser", savedUser.getLabel());
-        verify(userRepository).save(userModel);
+        assertEquals("Test User", savedUser.getLabel());
+        assertTrue(savedUser.getUserCode().startsWith("testUser_"));
+        verify(userRepository).save(any(UserModel.class));
     }
+
 
     @Test
     void testSaveWithExistingEmail() {

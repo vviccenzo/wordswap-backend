@@ -142,7 +142,7 @@ public class MessageService {
 	    return content;
 	}
 
-	private List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
+	public List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Long receiverId) {
 		return this.translationConfigRepository.findAllByConversationIdAndUserId(conversationId, receiverId).stream().toList();
 	}
 
@@ -165,15 +165,37 @@ public class MessageService {
         this.messageRepository.save(message);
     }
 
-    @Transactional
-    public void editMessage(MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        MessageModel message = this.getMessageById(dto.getId());
-        message.setContent(Encrypt.encrypt(dto.getContent()));
-        message.setIsEdited(Boolean.TRUE);
+	@Transactional
+	public void editMessage(MessageEditDTO dto) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		MessageModel message = this.getMessageById(dto.getId());
+		ConversationModel conversation = message.getConversation();
+		message.setIsEdited(Boolean.TRUE);
 
-        this.messageRepository.save(message);
-        this.sendWebSocketUpdate(message.getConversation().getUserInitiator().getId(), message.getConversation().getUserRecipient().getId());
-    }
+		List<TranslationConfigurationModel> receiverConfigs = this.getReceiverTranslationConfigs(
+			conversation.getId(), conversation.getUserRecipient().getId()
+		);
+
+		List<TranslationConfigurationModel> senderConfigs = this.getReceiverTranslationConfigs(
+			conversation.getId(), conversation.getUserInitiator().getId()
+		);
+
+		AtomicReference<String> content = new AtomicReference<>(dto.getContent());
+		if (!CollectionUtils.isEmpty(senderConfigs) || !CollectionUtils.isEmpty(receiverConfigs)) {
+			try {
+				this.processContent(content, receiverConfigs, senderConfigs, conversation);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		message.setContent(Encrypt.encrypt(content.get()));
+
+		this.messageRepository.save(message);
+
+		this.sendWebSocketUpdate(
+			message.getConversation().getUserInitiator().getId(), message.getConversation().getUserRecipient().getId()
+		);
+	}
 
     @Transactional
     public void deleteMessage(MessageDeleteDTO dto) {
@@ -188,7 +210,7 @@ public class MessageService {
         return this.messageRepository.findById(messageId).orElseThrow(() -> new EntityNotFoundException("Message not found."));
     }
 
-    private void sendWebSocketUpdate(Long senderId, Long receiverId) {
+    public void sendWebSocketUpdate(Long senderId, Long receiverId) {
         List<ConversationResponseDTO> convsSender = this.conversationService.findAllConversationByUserId(senderId, 0);
         List<ConversationResponseDTO> convsTarget = this.conversationService.findAllConversationByUserId(receiverId, 0);
 

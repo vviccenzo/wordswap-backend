@@ -32,8 +32,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 		if (this.isAllowedPath(request) && this.isAllowedMethod(request)) {
 			filterChain.doFilter(request, response);

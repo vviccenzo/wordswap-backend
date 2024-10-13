@@ -46,7 +46,7 @@ public class UserModel extends GenericModel {
 	@Column(name = "creation_date")
 	private LocalDate creationDate;
 
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+	@OneToOne(mappedBy = "user", orphanRemoval = true)
 	private UserProfileModel userProfile;
 
 	@Column(name = "role")
