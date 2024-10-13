@@ -3,7 +3,7 @@ management:
     enabled-by-default: false
     web:
       exposure:
-        include: health, prometheus, metrics
+        include: '*'
   endpoint:
     health:
       enabled: true
@@ -16,5 +16,5 @@ management:
 resilience4j.circuitbreaker:
   instances:
     avalicaoCB:
-      minimunNumberOfCalls: 4
+      minimumNumberOfCalls: 4
       slidingWindowSize: 8
