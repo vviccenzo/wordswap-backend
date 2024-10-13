@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.backend.wordswap.generic.entity.GenericModel;
 import com.backend.wordswap.user.entity.UserModel;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -23,8 +24,8 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class UserProfileModel extends GenericModel {
 
-	@OneToOne
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
 	private UserModel user;
 
 	@Column(name = "content")

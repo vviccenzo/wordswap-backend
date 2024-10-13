@@ -88,7 +88,7 @@ public class ConversationService {
 	}
 
 	public ConversationModel getOrCreateConversation(MessageCreateDTO dto) {
-		return dto.getConversationId() != null ? this.conversationRepository.findById(dto.getConversationId())
+		return dto.getConversationId() != null && dto.getConversationId().compareTo(0L) != 0 ? this.conversationRepository.findById(dto.getConversationId())
 				.orElseThrow(EntityNotFoundException::new) : this.createNewConversation(dto);
 	}
 

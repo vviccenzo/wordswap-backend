@@ -1,19 +1,26 @@
 package com.backend.wordswap.user;
 
-import com.backend.wordswap.user.dto.*;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.backend.wordswap.user.dto.UserCreateDTO;
+import com.backend.wordswap.user.dto.UserDTO;
+import com.backend.wordswap.user.dto.UserResponseDTO;
+import com.backend.wordswap.user.dto.UserUpdateDTO;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserEmailAlreadyExistsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;
 import com.backend.wordswap.user.factory.UserFactory;
+import com.backend.wordswap.user.profile.UserProfileRepository;
+import com.backend.wordswap.user.profile.entity.UserProfileModel;
+
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -21,24 +28,33 @@ public class UserService {
 
 	private final UserRepository userRepository;
 
+	private final UserProfileRepository userProfileRepository;
+
 	public List<UserResponseDTO> findAll() {
 		return userRepository.findAll().stream()
 				.map(userModel -> new UserResponseDTO(userModel.getId(), userModel.getUsername())).toList();
 	}
 
-	@Transactional
+	@Transactional(rollbackOn = Exception.class)
 	public UserDTO save(UserCreateDTO dto) throws IOException {
-		this.validateUser(dto);
+	    this.validateUser(dto);
 
-		UserModel model = UserFactory.createModelFromDto(dto);
-		model = this.userRepository.save(model);
+	    UserModel userModel = UserFactory.createModelFromDto(dto);
 
-		model.setUserCode(model.getUsername() + "_" + model.getId());
+	    String uniqueSuffix = UUID.randomUUID().toString();
+	    userModel.setUserCode(userModel.getUsername() + "_" + uniqueSuffix);
 
-		UserModel savedModel = this.userRepository.save(model);
-		savedModel.setName(dto.getName());
+	    UserModel savedUser = this.userRepository.save(userModel);
 
-		return new UserDTO(savedModel);
+	    if (dto.getFile() != null) {
+	        UserProfileModel profilePic = UserFactory.createUserProfile(dto.getFile(), savedUser);
+	        this.userProfileRepository.save(profilePic);
+	        savedUser.setUserProfile(profilePic);
+	    }
+
+	    savedUser.setName(dto.getName());
+
+	    return new UserDTO(savedUser);
 	}
 
 	@Transactional

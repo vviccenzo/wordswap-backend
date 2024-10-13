@@ -94,8 +94,6 @@ public class UserFactory {
 		model.setCreationDate(LocalDate.now());
 		model.setRole(UserRole.USER);
 		model.setName(dto.getName());
-
-		handleProfilePic(dto.getFile(), model);
 	}
 
 	public static void populateUserUpdateData(UserUpdateDTO dto, UserModel model) throws IOException {
@@ -115,7 +113,7 @@ public class UserFactory {
 		}
 	}
 
-	private static UserProfileModel createUserProfile(MultipartFile file, UserModel user) throws IOException {
+	public static UserProfileModel createUserProfile(MultipartFile file, UserModel user) throws IOException {
 		UserProfileModel profile = new UserProfileModel();
 		profile.setContent(file.getBytes());
 		profile.setFileName(file.getOriginalFilename());
