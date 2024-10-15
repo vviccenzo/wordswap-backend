@@ -9,7 +9,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**").allowedOrigins("http://localhost:3000", "http://localhost:3001", "https://107.21.147.148", "http://107.21.147.148")
+		registry.addMapping("/**").allowedOrigins("http://localhost:3000", "http://localhost:3001", "https://107.21.147.148", "http://107.21.147.148", "https://wordswap-frontend.vercel.app")
 				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE", "CONNECT")
 				.allowCredentials(true).maxAge(3600);
 	}
