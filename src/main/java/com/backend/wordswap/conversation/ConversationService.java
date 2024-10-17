@@ -80,6 +80,11 @@ public class ConversationService {
 
 	@Transactional
 	public ConversationModel createNewConversation(MessageCreateDTO dto) {
+		Optional<ConversationModel> optConv = this.conversationRepository.findByUserInitiatorIdAndUserRecipientId(dto.getSenderId(), dto.getReceiverId());
+		if(optConv.isPresent()) {
+			return optConv.get();
+		}
+		
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
 		UserModel receiver = this.userRepository.findById(dto.getReceiverId()).orElseThrow(EntityNotFoundException::new);
 
@@ -87,12 +92,15 @@ public class ConversationService {
 		conversation.setCreatedDate(LocalDate.now());
 		conversation.setUserInitiator(sender);
 		conversation.setUserRecipient(receiver);
+		
+		
 
 		return this.conversationRepository.save(conversation);
 	}
 
 	public ConversationModel getOrCreateConversation(MessageCreateDTO dto) {
-		return dto.getConversationId() != null && dto.getConversationId().compareTo(0L) != 0 ? this.conversationRepository.findById(dto.getConversationId())
+		return dto.getConversationId() != null && dto.getConversationId().compareTo(0L) != 0 ? 
+				this.conversationRepository.findById(dto.getConversationId())
 				.orElseThrow(EntityNotFoundException::new) : this.createNewConversation(dto);
 	}
 

@@ -35,7 +35,7 @@ public class UserController {
         @RequestParam String name,
         @RequestParam String bio,
         @RequestParam(required = false) MultipartFile file
-    ) {
+    ) throws IOException {
 		return this.userService.update(new UserUpdateDTO(id, name, bio, file));
 	}
 
