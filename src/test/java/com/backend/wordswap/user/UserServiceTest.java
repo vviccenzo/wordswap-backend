@@ -112,7 +112,7 @@ class UserServiceTest {
     }
 
     @Test
-    void testUpdate() {
+    void testUpdate() throws IOException {
         when(userRepository.findById(1L)).thenReturn(Optional.of(userModel));
         when(userRepository.save(any(UserModel.class))).thenReturn(userModel);
 

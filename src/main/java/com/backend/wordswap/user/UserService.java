@@ -58,10 +58,17 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDTO update(UserUpdateDTO dto) {
+	public UserDTO update(UserUpdateDTO dto) throws IOException {
 		UserModel modelToUpdate = this.userRepository.findById(dto.getId()).orElseThrow(() -> new UserNotFoundException("User not found."));
 		UserModel updatedModel = UserFactory.updateModelFromDto(dto, modelToUpdate);
 		UserModel savedModel = this.userRepository.save(updatedModel);
+
+	    if (dto.getFile() != null) {
+	        UserProfileModel profilePic = UserFactory.createUserProfile(dto.getFile(), updatedModel);
+	        this.userProfileRepository.save(profilePic);
+	        updatedModel.setUserProfile(profilePic);
+	    }
+
 		savedModel.setName(dto.getName());
 
 		return new UserDTO(savedModel);
