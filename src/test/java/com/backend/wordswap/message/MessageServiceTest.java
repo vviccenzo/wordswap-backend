@@ -207,23 +207,6 @@ class MessageServiceTest {
     }
 
     @Test
-    void testValidateInputWithEmptyContent() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            messageService.validateInput("");
-        });
-
-        assertEquals("Conteúdo não pode ser vazio.", exception.getMessage());
-    }
-
-    @Test
-    void testValidateInputWithValidContent() {
-        String validContent = "Hello";
-        String result = messageService.validateInput(validContent);
-
-        assertEquals(validContent, result);
-    }
-
-    @Test
     void testImproveContentIfActive() throws Exception {
         TranslationConfigurationModel config = new TranslationConfigurationModel();
         config.setIsActive(true);
@@ -238,7 +221,7 @@ class MessageServiceTest {
     }
 
     @Test
-    void testImproveContentIfNotActive() throws Exception {
+    void testImproveContentIfNotActive() {
         TranslationConfigurationModel config = new TranslationConfigurationModel();
         config.setIsActive(false);
 
@@ -262,7 +245,7 @@ class MessageServiceTest {
     }
 
     @Test
-    void testTranslateContentIfNotActive() throws Exception {
+    void testTranslateContentIfNotActive() {
         TranslationConfigurationModel config = new TranslationConfigurationModel();
         config.setIsActive(false);
 

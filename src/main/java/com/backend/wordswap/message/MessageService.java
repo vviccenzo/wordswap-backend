@@ -35,6 +35,7 @@ import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.websocket.WebSocketAction;
 import com.backend.wordswap.websocket.WebSocketResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -61,7 +62,9 @@ public class MessageService {
 		List<TranslationConfigurationModel> senderConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(), dto.getSenderId());
 
 		AtomicReference<String> content = new AtomicReference<>(dto.getContent());
-		if (!CollectionUtils.isEmpty(senderConfigs) || !CollectionUtils.isEmpty(receiverConfigs)) {
+
+		Boolean hasConfigs = !CollectionUtils.isEmpty(senderConfigs) || !CollectionUtils.isEmpty(receiverConfigs);
+		if (hasConfigs.booleanValue()) {
 			this.processContent(content, receiverConfigs, senderConfigs, conversation);
 		}
 
@@ -72,7 +75,7 @@ public class MessageService {
 	private AtomicReference<String> processContent(AtomicReference<String> content, 
 			List<TranslationConfigurationModel> receiverConfigs, List<TranslationConfigurationModel> senderConfigs, ConversationModel conv) throws Exception 
 	{
-	    String validatedContent = this.validateInput(content.get());
+	    String validatedContent = content.get();
 	    String lastMessages = conv.getMessages().stream()
 	    	    .sorted(Comparator.comparing(MessageModel::getSentAt).reversed())
 	    	    .limit(5)
@@ -90,32 +93,37 @@ public class MessageService {
 	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(receiverConfigs, TranslationType.RECEIVING);
 	    TranslationConfigurationModel configImproving = this.getTranslationConfig(senderConfigs, TranslationType.IMPROVING);
 
-		validatedContent = this.geminiAPIService.validateContent(validatedContent);
-		if (StringUtils.isBlank(validatedContent)) {
-			validatedContent = content.get();
+	    if(StringUtils.isNotBlank(validatedContent)) {
+	    	validatedContent = this.doGeminiConfigs(content, validatedContent, lastMessages, configReceiver, configImproving);
+	    }
+
+	    content.set(validatedContent);
+
+	    return content;
+	}
+	
+	public boolean isValidContent(String content) throws JsonProcessingException {
+		return this.geminiAPIService.validateContent(content).trim().equalsIgnoreCase("Mensagem Válida".trim());
+	}
+
+	private String doGeminiConfigs(AtomicReference<String> content, String validatedContent, String lastMessages, TranslationConfigurationModel configReceiver, 
+			TranslationConfigurationModel configImproving) throws JsonProcessingException 
+	{
+		if(!this.isValidContent(content.get())) {
+			throw new RuntimeException("Envie uma mensagem válida, caso queira utilizar funções que usam Inteligencia Artificial.");
 		}
 
 		validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
 		if (StringUtils.isBlank(validatedContent)) {
 			validatedContent = content.get();
 		}
-
+		
 		validatedContent = this.translateContentIfActive(configReceiver, validatedContent, lastMessages);
 		if (StringUtils.isBlank(validatedContent)) {
 			validatedContent = content.get();
 		}
 
-	    content.set(validatedContent);
-
-	    return content;
-	}
-
-	public String validateInput(String content) {
-	    if (StringUtils.isBlank(content)) {
-	        throw new IllegalArgumentException("Conteúdo não pode ser vazio.");
-	    }
-
-	    return content;
+		return validatedContent;
 	}
 
 	public String improveContentIfActive(TranslationConfigurationModel config, String content, String context) {

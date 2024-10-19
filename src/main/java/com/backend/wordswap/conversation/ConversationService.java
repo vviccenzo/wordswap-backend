@@ -93,8 +93,6 @@ public class ConversationService {
 		conversation.setUserInitiator(sender);
 		conversation.setUserRecipient(receiver);
 		
-		
-
 		return this.conversationRepository.save(conversation);
 	}
 
