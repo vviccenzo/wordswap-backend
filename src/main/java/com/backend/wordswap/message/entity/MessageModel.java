@@ -39,7 +39,7 @@ public class MessageModel extends GenericModel {
 	@OneToOne(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private MessageImageModel image;
 
-	@Column(name = "content")
+	@Column(name = "message_content", columnDefinition = "TEXT" )
 	private String content;
 
 	@Column(name = "sent_at")
