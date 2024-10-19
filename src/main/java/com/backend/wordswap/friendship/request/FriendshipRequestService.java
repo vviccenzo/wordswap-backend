@@ -7,6 +7,9 @@ import java.util.Optional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.backend.wordswap.conversation.ConversationRepository;
+import com.backend.wordswap.conversation.ConversationService;
+import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.friendship.dto.FriendshipDTO;
 import com.backend.wordswap.friendship.dto.FriendshipRequestUpdateDTO;
 import com.backend.wordswap.friendship.exception.FriendshipAlreadySendedException;
@@ -20,29 +23,23 @@ import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.websocket.WebSocketAction;
-import com.backend.wordswap.websocket.WebSocketResponse;
 import com.backend.wordswap.websocket.WebSocketConstant;
+import com.backend.wordswap.websocket.WebSocketResponse;
 
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class FriendshipRequestService {
 	
 	private final SimpMessagingTemplate messagingTemplate;
+	private final UserService userService;
+	private final ConversationService conversationService;
 
 	private final UserRepository userRepository;
-
 	private final FriendshipRequestRepository friendshipRequestRepository;
-
-	private final UserService userService;
-
-	public FriendshipRequestService(UserRepository userRepository, FriendshipRequestRepository friendshipRequestRepository, SimpMessagingTemplate messagingTemplate,
-			UserService userService) {
-		this.userRepository = userRepository;
-		this.friendshipRequestRepository = friendshipRequestRepository;
-		this.messagingTemplate = messagingTemplate;
-		this.userService = userService;
-	}
+	private final ConversationRepository conversationRepository; 
 
 	public void sendInvite(FriendshipRequestCreateDTO dto, WebSocketAction socketAction) {
 
@@ -77,8 +74,7 @@ public class FriendshipRequestService {
 	}
 
 	private boolean validateRequest(FriendshipRequestCreateDTO dto) {
-		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository
-				.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
+		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
 		if (optRequest.isPresent()) {
 			throw new FriendshipAlreadySendedException("Friendship already sended.");
 		}
@@ -135,14 +131,24 @@ public class FriendshipRequestService {
 		friend.getFriends().removeIf(friendToDelete -> friendToDelete.getId().equals(dto.userId()));
 
 		this.userRepository.saveAll(List.of(user, friend));
+		this.friendshipRequestRepository.deleteAllByFriendship(user.getId(), friend.getId());
+		this.conversationRepository.deleteAllByFriendship(user.getId(), friend.getId());
 
 		List<UserDTO> friendsSender = this.userService.findFriendsByUserId(friend.getId());
 		List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user.getId());
+
+        List<ConversationResponseDTO> convSender = this.conversationService.findAllConversationByUserId(user.getId(), 0);
+        List<ConversationResponseDTO> convReceiver = this.conversationService.findAllConversationByUserId(friend.getId(), 0);
 
 		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + friend.getId(),
 				new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsSender));
 		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + user.getId(),
 				new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsTarget));
+
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + user.getId(),
+				new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convSender));
+		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + friend.getId(),
+				new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convReceiver));
 	}
 
 	public List<FriendshipDTO> findAllByUserId(Long userId) {
