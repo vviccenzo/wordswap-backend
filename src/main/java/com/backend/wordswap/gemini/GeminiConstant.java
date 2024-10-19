@@ -11,10 +11,9 @@ public class GeminiConstant {
 
 	public static final String PROMPT_IMPROVE = "Aqui está o contexto das últimas mensagens: %s. Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: %s. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a mensagem melhorada e nada mais.";
 
-	public static final String PROMPT_VALIDATE = "Valide esta mensagem para garantir a integridade, "
-			+ "pois irei utilizar ela em outro prompt, caso ela não seja uma mensagem válida, "
-			+ "corrija a mesma, sem alterar a formalidade da mensagem ou o conteúdo diretamente, quero que foque em coisas como combinações de caracter especial suspeitos"
-			+ ", SQL Injection, corrija e me devolva SOMENTE a mensagem ajustada. E nada mais. Mensagem: %s";
+	public static final String PROMPT_VALIDATE = "Valide a seguinte mensagem: '%s'. Se for uma saudação simples, frase comum ou texto sem caracteres suspeitos ou maliciosos, "
+			+ "devolva 'Mensagem Válida'. Concentre-se em detectar apenas padrões perigosos, como tentativas de SQL Injection, comandos de sistema, ou "
+			+ "sequências incomuns de caracteres especiais que possam representar um risco de segurança. Se encontrar algo perigoso, devolva 'Mensagem Inválida'. Caso contrário, devolva 'Mensagem Válida'.";
 	
 	public static final String CONTENT_TYPE = "Content-Type";
 	
