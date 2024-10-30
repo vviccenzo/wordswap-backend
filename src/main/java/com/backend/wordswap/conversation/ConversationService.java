@@ -83,6 +83,11 @@ public class ConversationService {
 		if(optConv.isPresent()) {
 			return optConv.get();
 		}
+
+		Optional<ConversationModel> optConvOtherView = this.conversationRepository.findByUserInitiatorIdAndUserRecipientId(dto.getReceiverId(), dto.getSenderId());
+		if(optConvOtherView.isPresent()) {
+			return optConvOtherView.get();
+		}
 		
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
 		UserModel receiver = this.userRepository.findById(dto.getReceiverId()).orElseThrow(EntityNotFoundException::new);
