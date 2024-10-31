@@ -15,7 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -84,6 +83,11 @@ public class ConversationService {
 		if(optConv.isPresent()) {
 			return optConv.get();
 		}
+
+		Optional<ConversationModel> optConvOtherView = this.conversationRepository.findByUserInitiatorIdAndUserRecipientId(dto.getReceiverId(), dto.getSenderId());
+		if(optConvOtherView.isPresent()) {
+			return optConvOtherView.get();
+		}
 		
 		UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
 		UserModel receiver = this.userRepository.findById(dto.getReceiverId()).orElseThrow(EntityNotFoundException::new);
@@ -117,29 +121,6 @@ public class ConversationService {
 
 		if (conv.getUserRecipient().getId().compareTo(dto.getUserId()) == 0) {
 			conv.setIsDeletedRecipient(Boolean.TRUE);
-		}
-
-		this.conversationRepository.save(conv);
-
-        List<ConversationResponseDTO> convsSender = this.findAllConversationByUserId(dto.getUserId(), 0);
-
-        this.messagingTemplate.convertAndSend("/topic/messages/" + dto.getUserId(), new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, convsSender));
-	}
-
-	public void archiveConversartion(ConversartionArchiveDTO dto) {
-		Optional<ConversationModel> optConv = this.conversationRepository.findById(dto.getId());
-		if (optConv.isEmpty()) {
-			throw new EntityNotFoundException("Conversartion not founded. ID: " + dto.getId());
-		}
-
-		ConversationModel conv = optConv.get();
-
-		if (conv.getUserInitiator().getId().compareTo(dto.getUserId()) == 0) {
-			conv.setArchivedInitiator(dto.getHasToArchive());
-		}
-
-		if (conv.getUserRecipient().getId().compareTo(dto.getUserId()) == 0) {
-			conv.setArchivedRecipient(dto.getHasToArchive());
 		}
 
 		this.conversationRepository.save(conv);

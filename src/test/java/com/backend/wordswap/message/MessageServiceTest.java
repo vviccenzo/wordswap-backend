@@ -126,11 +126,11 @@ class MessageServiceTest {
         when(translationConfigRepository.findAllByConversationIdAndUserId(any(), any()))
                 .thenReturn(Collections.singletonList(new TranslationConfigurationModel()));
 
-        when(geminiAPIService.validateContent(dto.getContent())).thenReturn(dto.getContent());
+        when(geminiAPIService.validateContent(dto.getContent())).thenReturn("Mensagem Válida".trim());
         when(geminiAPIService.improveText(any(), any())).thenReturn("Improved Hello");
         when(geminiAPIService.translateText(any(), any(), any())).thenReturn("Translated Hello");
 
-        messageService.sendMessage(dto);
+        this.messageService.sendMessage(dto);
 
         verify(messageRepository, times(1)).save(any(MessageModel.class));
     }
@@ -385,7 +385,7 @@ class MessageServiceTest {
 	    when(this.translationConfigRepository.findAllByConversationIdAndUserId(dto.getConversationId(), dto.getReceiverId()))
 	        .thenReturn(Collections.emptyList());
 
-	    when(this.geminiAPIService.validateContent("Hello with sender config")).thenReturn("Hello with sender config");
+        when(this.geminiAPIService.validateContent(dto.getContent())).thenReturn("Mensagem Válida".trim());
 	    when(this.geminiAPIService.improveText("Hello with sender config", "Context")).thenReturn("Improved Hello with sender config");
 	    
 	    this.messageService.sendMessage(dto);
@@ -413,7 +413,7 @@ class MessageServiceTest {
 	    when(this.translationConfigRepository.findAllByConversationIdAndUserId(dto.getConversationId(), dto.getReceiverId()))
 	        .thenReturn(List.of(receiverConfig));
 
-	    when(this.geminiAPIService.validateContent(anyString())).thenReturn("Hello with receiver config");
+        when(this.geminiAPIService.validateContent(dto.getContent())).thenReturn("Mensagem Válida".trim());
 	    when(this.geminiAPIService.translateText(anyString(), eq("es"), anyString())).thenReturn("Translated Hello with receiver config");
 
 	    this.messageService.sendMessage(dto);

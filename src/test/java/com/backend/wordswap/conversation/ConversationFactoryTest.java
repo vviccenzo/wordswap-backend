@@ -50,8 +50,6 @@ class ConversationFactoryTest {
         conversation.setId(1L);
         conversation.setUserInitiator(userInitiator);
         conversation.setUserRecipient(userRecipient);
-        conversation.setArchivedInitiator(false);
-        conversation.setArchivedRecipient(false);
         this.conversation.setIsDeletedInitiator(false);
         this.conversation.setIsDeletedRecipient(false);
 

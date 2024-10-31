@@ -21,6 +21,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.backend.wordswap.conversation.ConversationRepository;
+import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.friendship.dto.FriendshipDTO;
 import com.backend.wordswap.friendship.dto.FriendshipRequestUpdateDTO;
 import com.backend.wordswap.friendship.exception.FriendshipAlreadySendedException;
@@ -42,10 +44,16 @@ class FriendshipRequestServiceTest {
 	private UserRepository userRepository;
 
 	@Mock
+	private ConversationRepository conversationRepository;
+
+	@Mock
 	private FriendshipRequestRepository friendshipRequestRepository;
 
 	@Mock
 	private UserService userService;
+
+	@Mock
+	private ConversationService conversationService;
 	
 	@Mock
 	private SimpMessagingTemplate messagingTemplate;

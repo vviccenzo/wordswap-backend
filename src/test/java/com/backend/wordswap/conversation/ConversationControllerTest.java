@@ -70,13 +70,4 @@ class ConversationControllerTest {
 		verify(translationConfigurationService, times(1)).configurateTranslation(dto);
 		assertEquals(responseDto, result);
 	}
-
-	@Test
-	void testArchiveConversation() {
-		ConversartionArchiveDTO dto = new ConversartionArchiveDTO(1L, 1L, true);
-
-		conversationController.deleteConversartion(dto);
-
-		verify(conversationService, times(1)).archiveConversartion(dto);
-	}
 }

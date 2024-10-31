@@ -45,12 +45,6 @@ public class ConversationModel extends GenericModel {
 	@Column(name = "is_deleted_recipient")
 	private Boolean isDeletedRecipient = Boolean.FALSE;
 
-	@Column(name = "is_archived_initiator", nullable = false)
-	private boolean isArchivedInitiator;
-
-	@Column(name = "is_archived_recipient")
-	private boolean isArchivedRecipient;
-
 	@Transient
 	public TranslationConfigurationModel getTranslationByUserId(Long userId) {
 		return translationConfigurations.stream().filter(

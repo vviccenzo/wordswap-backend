@@ -3,7 +3,6 @@ package com.backend.wordswap.conversation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -26,8 +25,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -53,6 +52,9 @@ class ConversationServiceTest {
 
 	@Mock
 	private MessageRepository messageRepository;
+	
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
 
 	@BeforeEach
 	void setUp() {
@@ -209,6 +211,7 @@ class ConversationServiceTest {
 		conversation.setUserRecipient(recipient);
 
 		when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+		when(this.userRepository.findById(userId)).thenReturn(Optional.of(initiator));
 
 		this.conversationService.deleteConversartion(dto);
 
@@ -234,73 +237,13 @@ class ConversationServiceTest {
 		conversation.setUserRecipient(recipient);
 
 		when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
-
+		when(this.userRepository.findById(userId)).thenReturn(Optional.of(initiator));
+		
 		this.conversationService.deleteConversartion(dto);
 
 		verify(this.conversationRepository, times(1)).save(conversation);
 		assert (conversation.getIsDeletedRecipient());
 	}
-
-	@Test
-    void testArchiveConversation_ShouldThrowException_WhenConversationNotFound() {
-        Long conversationId = 1L;
-        Long userId = 1L;
-        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
-
-        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> this.conversationService.archiveConversartion(dto));
-
-        verify(this.conversationRepository, never()).save(any());
-    }
-
-    @Test
-    void testArchiveConversation_ShouldSetArchivedInitiator_WhenUserIsInitiator() {
-        Long conversationId = 1L;
-        Long userId = 1L;
-        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
-
-        UserModel initiator = new UserModel();
-        initiator.setId(userId);
-        UserModel recipient = new UserModel();
-        recipient.setId(2L);
-
-        ConversationModel conversation = new ConversationModel();
-        conversation.setId(conversationId);
-        conversation.setUserInitiator(initiator);
-        conversation.setUserRecipient(recipient);
-
-        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
-
-        this.conversationService.archiveConversartion(dto);
-
-        verify(this.conversationRepository, times(1)).save(conversation);
-        assertTrue(conversation.isArchivedInitiator());
-    }
-
-    @Test
-    void testArchiveConversation_ShouldSetArchivedRecipient_WhenUserIsRecipient() {
-        Long conversationId = 1L;
-        Long userId = 2L;
-        ConversartionArchiveDTO dto = new ConversartionArchiveDTO(conversationId, userId, true);
-
-        UserModel initiator = new UserModel();
-        initiator.setId(1L);
-        UserModel recipient = new UserModel();
-        recipient.setId(userId);
-
-        ConversationModel conversation = new ConversationModel();
-        conversation.setId(conversationId);
-        conversation.setUserInitiator(initiator);
-        conversation.setUserRecipient(recipient);
-
-        when(this.conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
-
-        this.conversationService.archiveConversartion(dto);
-
-        verify(this.conversationRepository, times(1)).save(conversation);
-        assertTrue(conversation.isArchivedRecipient());
-    }
 
     @Test
     void testGetTotalMessagesByConversation() {
