@@ -6,7 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.backend.wordswap.friendship.request.FriendshipRequestService;
+import com.backend.wordswap.friendshipRequest.FriendshipRequestService;
 import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.websocket.definition.WebSocketErrorResponse;
 

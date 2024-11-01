@@ -10,8 +10,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.backend.wordswap.auth.security.SecurityFilter;
-import com.backend.wordswap.auth.token.TokenService;
+import com.backend.wordswap.domain.security.SecurityFilter;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.entity.UserRole;

@@ -1,7 +1,8 @@
-package com.backend.wordswap.friendship.request;
+package com.backend.wordswap.friendshipRequest;
 
-import com.backend.wordswap.friendship.dto.FriendshipDTO;
-import com.backend.wordswap.friendship.request.entity.FriendshipRequestModel;
+
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDTO;
+import com.backend.wordswap.friendshipRequest.entity.FriendshipRequestModel;
 
 import lombok.experimental.UtilityClass;
 

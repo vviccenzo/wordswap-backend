@@ -1,11 +1,11 @@
-package com.backend.wordswap.auth.token;
+package com.backend.wordswap.auth;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.wordswap.auth.token.definition.TokenResponseDTO;
+import com.backend.wordswap.auth.dto.TokenResponseDTO;
 
 import lombok.AllArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.backend.wordswap.friendship.request.dto;
+package com.backend.wordswap.friendshipRequest.dto;
 
 import lombok.Data;
 

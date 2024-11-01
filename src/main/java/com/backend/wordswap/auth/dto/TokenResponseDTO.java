@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth.token.definition;
+package com.backend.wordswap.auth.dto;
 
 public record TokenResponseDTO(Boolean isValid) {
 

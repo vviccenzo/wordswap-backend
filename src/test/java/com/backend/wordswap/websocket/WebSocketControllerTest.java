@@ -10,11 +10,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.backend.wordswap.friendship.dto.FriendshipRequestUpdateDTO;
-import com.backend.wordswap.friendship.request.FriendshipRequestService;
-import com.backend.wordswap.friendship.request.dto.FriendshipDeleteRequestDTO;
-import com.backend.wordswap.friendship.request.dto.FriendshipRequestCreateDTO;
-import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
+import com.backend.wordswap.friendshipRequest.FriendshipRequestService;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDeleteRequestDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipRequestCreateDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipRequestUpdateDTO;
+import com.backend.wordswap.friendshipRequest.entity.enumeration.StatusType;
 import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;

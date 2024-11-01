@@ -1,4 +1,4 @@
-package com.backend.wordswap.domain;
+package com.backend.wordswap.domain.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

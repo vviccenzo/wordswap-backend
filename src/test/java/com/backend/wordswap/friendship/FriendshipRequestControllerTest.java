@@ -1,9 +1,12 @@
 package com.backend.wordswap.friendship;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.backend.wordswap.friendship.dto.FriendshipDTO;
-import com.backend.wordswap.friendship.request.FriendshipRequestController;
-import com.backend.wordswap.friendship.request.FriendshipRequestService;
-import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
-
-import java.time.LocalDate;
-import java.util.List;
+import com.backend.wordswap.friendshipRequest.FriendshipRequestController;
+import com.backend.wordswap.friendshipRequest.FriendshipRequestService;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDTO;
+import com.backend.wordswap.friendshipRequest.entity.enumeration.StatusType;
 
 public class FriendshipRequestControllerTest {
 

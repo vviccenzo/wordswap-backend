@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.backend.wordswap.auth.TokenService;
 import com.backend.wordswap.auth.dto.AuthDTO;
-import com.backend.wordswap.auth.token.TokenService;
 import com.backend.wordswap.auth.util.BCryptUtil;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.dto.UserInfoDTO;

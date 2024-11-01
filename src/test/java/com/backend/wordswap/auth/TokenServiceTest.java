@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-import com.backend.wordswap.auth.token.TokenService;
 import com.backend.wordswap.user.entity.UserModel;
 
 class TokenServiceTest {

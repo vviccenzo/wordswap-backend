@@ -1,4 +1,4 @@
-package com.backend.wordswap.friendship.request;
+package com.backend.wordswap.friendshipRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
-import com.backend.wordswap.friendship.dto.FriendshipDTO;
-import com.backend.wordswap.friendship.dto.FriendshipRequestUpdateDTO;
-import com.backend.wordswap.friendship.exception.FriendshipAlreadySendedException;
-import com.backend.wordswap.friendship.request.dto.FriendshipDeleteRequestDTO;
-import com.backend.wordswap.friendship.request.dto.FriendshipRequestCreateDTO;
-import com.backend.wordswap.friendship.request.entity.FriendshipRequestModel;
-import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDeleteRequestDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipRequestCreateDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipRequestUpdateDTO;
+import com.backend.wordswap.friendshipRequest.entity.FriendshipRequestModel;
+import com.backend.wordswap.friendshipRequest.entity.enumeration.StatusType;
+import com.backend.wordswap.friendshipRequest.exception.FriendshipAlreadySendedException;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.dto.UserDTO;
