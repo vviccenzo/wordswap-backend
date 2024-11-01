@@ -1,12 +1,12 @@
 package com.backend.wordswap.domain;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
-import com.backend.wordswap.friendship.exception.FriendshipAlreadySendedException;
+import com.backend.wordswap.friendshipRequest.exception.FriendshipAlreadySendedException;
 import com.backend.wordswap.user.exception.UserEmailAlreadyExistsException;
 import com.backend.wordswap.user.exception.UserNotFoundException;
 import com.backend.wordswap.user.exception.UsernameAlreadyExistsException;

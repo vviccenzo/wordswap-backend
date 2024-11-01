@@ -1,15 +1,22 @@
-package com.backend.wordswap.friendship.request.entity;
+package com.backend.wordswap.friendshipRequest.entity;
 
-import com.backend.wordswap.friendship.request.entity.enumeration.StatusType;
+import java.time.LocalDateTime;
+
+import com.backend.wordswap.friendshipRequest.entity.enumeration.StatusType;
 import com.backend.wordswap.generic.entity.GenericModel;
 import com.backend.wordswap.user.entity.UserModel;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @Entity

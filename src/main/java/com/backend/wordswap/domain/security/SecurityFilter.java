@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth.security;
+package com.backend.wordswap.domain.security;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.backend.wordswap.auth.token.TokenService;
+import com.backend.wordswap.auth.TokenService;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;

@@ -38,7 +38,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", GeminiUtils.formatPromptTranslate(context, text, language));
+		partsNode.put("text", GeminiUtils.formatPromptTranslate(text, language));
 		contentNode.set(GeminiConstant.PARTS, objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();
@@ -63,7 +63,7 @@ public class GeminiAPIService {
 		ObjectNode contentNode = objectMapper.createObjectNode();
 		ObjectNode partsNode = objectMapper.createObjectNode();
 
-		partsNode.put("text", GeminiUtils.formatPromptImprove(context, text));
+		partsNode.put("text", GeminiUtils.formatPromptImprove(text));
 		contentNode.set(GeminiConstant.PARTS, objectMapper.createArrayNode().add(partsNode));
 
 		ObjectNode requestBodyNode = objectMapper.createObjectNode();

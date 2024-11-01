@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ChatResponse {
+	
     private Candidates[] candidates;
 
     public Candidates[] getCandidates() {

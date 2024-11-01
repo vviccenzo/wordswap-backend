@@ -2,7 +2,7 @@ package com.backend.wordswap.auth;
 
 import org.junit.jupiter.api.Test;
 
-import com.backend.wordswap.auth.token.definition.TokenResponseDTO;
+import com.backend.wordswap.auth.dto.TokenResponseDTO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

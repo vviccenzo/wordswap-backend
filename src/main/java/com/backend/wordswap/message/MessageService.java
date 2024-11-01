@@ -103,7 +103,18 @@ public class MessageService {
 	}
 	
 	public boolean isValidContent(String content) throws JsonProcessingException {
-		return this.geminiAPIService.validateContent(content).trim().equalsIgnoreCase("Mensagem Válida".trim());
+	    final String VALID_MESSAGE = "Mensagem Válida";
+
+	    if (content == null || content.trim().isEmpty()) {
+	        return false;
+	    }
+
+	    String response = this.geminiAPIService.validateContent(content);
+	    if (response == null || response.trim().isEmpty()) {
+	        return false;
+	    }
+
+	    return response.trim().equalsIgnoreCase(VALID_MESSAGE);
 	}
 
 	private String doGeminiConfigs(AtomicReference<String> content, String validatedContent, String lastMessages, TranslationConfigurationModel configReceiver, 

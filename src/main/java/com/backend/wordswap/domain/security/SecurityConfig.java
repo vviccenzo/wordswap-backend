@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth.security;
+package com.backend.wordswap.domain.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

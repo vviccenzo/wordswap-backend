@@ -1,4 +1,4 @@
-package com.backend.wordswap.friendship.exception;
+package com.backend.wordswap.friendshipRequest.exception;
 
 public class FriendshipAlreadySendedException extends RuntimeException {
 

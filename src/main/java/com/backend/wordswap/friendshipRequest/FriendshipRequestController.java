@@ -1,4 +1,4 @@
-package com.backend.wordswap.friendship.request;
+package com.backend.wordswap.friendshipRequest;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.wordswap.friendship.dto.FriendshipDTO;
+import com.backend.wordswap.friendshipRequest.dto.FriendshipDTO;
 
 @RestController
 @RequestMapping("/friendship")

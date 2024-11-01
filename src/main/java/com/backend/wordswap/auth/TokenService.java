@@ -1,4 +1,4 @@
-package com.backend.wordswap.auth.token;
+package com.backend.wordswap.auth;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
