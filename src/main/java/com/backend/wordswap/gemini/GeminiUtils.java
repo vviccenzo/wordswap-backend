@@ -13,12 +13,12 @@ public class GeminiUtils {
 		return String.format(constant, text);
 	}
 
-	public static String formatPromptTranslate(String context, String text, String language) {
-		return String.format(GeminiConstant.PROMPT_TRANSLATE, context, text, language, text);
+	public static String formatPromptTranslate(String text, String language) {
+		return String.format(GeminiConstant.PROMPT_TRANSLATE, text, language, text);
 	}
 
-	public static String formatPromptImprove(String context, String text) {
-		return String.format(GeminiConstant.PROMPT_IMPROVE, context, text);
+	public static String formatPromptImprove(String text) {
+		return String.format(GeminiConstant.PROMPT_IMPROVE, text);
 	}
 
 	public static String extractTextFromResponse(String jsonResponse) throws JsonProcessingException {
