@@ -2,8 +2,7 @@
 
 ## Pré-requisitos
 
-- [Java JDK](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) (versão 11 ou superior)
-- [Maven](https://maven.apache.org/) para gerenciamento de dependências (opcional, se não usar o Spring Boot)
+- [Java JDK](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) (versão 17 ou superior)
 - IDE de sua escolha (por exemplo, [IntelliJ IDEA](https://www.jetbrains.com/idea/) ou [Eclipse](https://www.eclipse.org/))
 
 ## Clonando o Repositório
