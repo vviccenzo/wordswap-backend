@@ -22,7 +22,7 @@ class GeminiUtilsTest {
 	    String text = "Hello!";
 	    String language = "es";
 	    String result = GeminiUtils.formatPromptTranslate(text, language);
-	    String expected = "Agora, preciso que você traduza a seguinte mensagem: 'Hello!', para o idioma: es. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a tradução de 'Hello!' e nada mais.";
+	    String expected = String.format(GeminiConstant.PROMPT_TRANSLATE, text, language, text);
 	    assertEquals(expected, result);
 	}
 
@@ -30,7 +30,7 @@ class GeminiUtilsTest {
 	void testFormatPromptImprove() {
 	    String text = "Hello!";
 	    String result = GeminiUtils.formatPromptImprove(text);
-	    String expected = "Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: Hello!. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Retorne apenas a mensagem melhorada e nada mais.";
+	    String expected = String.format(GeminiConstant.PROMPT_IMPROVE, text);
 	    assertEquals(expected, result);
 	}
 
