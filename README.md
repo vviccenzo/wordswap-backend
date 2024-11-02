@@ -1,4 +1,4 @@
-# WordSwap - Backend
+# WordSwap - Back-end
 
 ## Pré-requisitos
 
