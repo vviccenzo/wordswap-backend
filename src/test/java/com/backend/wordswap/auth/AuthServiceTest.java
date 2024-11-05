@@ -47,7 +47,7 @@ class AuthServiceTest {
 			loginService.login(username, password);
 		});
 
-		assertEquals("User not found.", exception.getMessage());
+		assertEquals("Usuário não encontrado", exception.getMessage());
 	}
 
 	@Test
@@ -65,7 +65,7 @@ class AuthServiceTest {
 			loginService.login(username, password);
 		});
 
-		assertEquals("Invalid credentials.", exception.getMessage());
+		assertEquals("Usuário ou senha incorretos.", exception.getMessage());
 	}
 
 	@Test

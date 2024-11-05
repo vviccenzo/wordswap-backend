@@ -1,5 +1,7 @@
 package com.backend.wordswap.auth.login;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,8 +20,14 @@ public class LoginController {
 	}
 
 	@PostMapping(path = "/login")
-	public AuthDTO login(@RequestParam("user") String user, @RequestParam("password") String password) {
-		return this.loginService.login(user, password);
+	public ResponseEntity<?> login(@RequestParam("user") String user, @RequestParam("password") String password) {
+	    try {
+	        AuthDTO authDTO = this.loginService.login(user, password);
+	        return ResponseEntity.ok(authDTO);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+	    }
 	}
+
 
 }

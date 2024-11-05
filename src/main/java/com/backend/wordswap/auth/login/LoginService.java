@@ -31,13 +31,13 @@ public class LoginService {
 	public AuthDTO login(String user, String password) {
 		Optional<UserModel> optUser = this.userRepository.findByUsername(user);
 		if (optUser.isEmpty()) {
-			throw new UserNotFoundException("User not found.");
+			throw new UserNotFoundException("Usuário não encontrado");
 		}
 
 		UserModel userModel = optUser.get();
 		boolean isPasswordValid = BCryptUtil.checkPassword(password, userModel.getPassword());
 		if (!isPasswordValid) {
-			throw new InvalidCredentialsException("Invalid credentials.");
+			throw new InvalidCredentialsException("Usuário ou senha incorretos.");
 		}
 
 		String token = this.tokenService.generateToken(userModel);
