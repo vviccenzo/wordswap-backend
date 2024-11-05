@@ -1,6 +1,8 @@
 package com.backend.wordswap.message.entity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
@@ -57,7 +59,7 @@ public class MessageModel extends GenericModel {
 	public MessageModel(String content, UserModel sender, ConversationModel conversation) {
 		this.content = content;
 		this.sender = sender;
-		this.sentAt = LocalDateTime.now();
+		this.sentAt = ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).toLocalDateTime();
 		this.conversation = conversation;
 	}
 }
