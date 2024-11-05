@@ -122,8 +122,18 @@ public class MessageService {
 	private String doGeminiConfigs(AtomicReference<String> content, String validatedContent, String lastMessages, TranslationConfigurationModel configReceiver, 
 			TranslationConfigurationModel configImproving) throws JsonProcessingException 
 	{
-		if(!this.isValidContent(content.get())) {
-			throw new RuntimeException("Envie uma mensagem válida, caso queira utilizar funções que usam Inteligencia Artificial.");
+		int maxAttempts = 3;
+		boolean isValid = false;
+
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+		    if (this.isValidContent(content.get())) {
+		        isValid = true;
+		        break;
+		    }
+		}
+
+		if (!isValid) {
+		    throw new RuntimeException("Envie uma mensagem válida, caso queira utilizar funções que usam Inteligência Artificial.");
 		}
 
 		validatedContent = this.improveContentIfActive(configImproving, validatedContent, lastMessages);
