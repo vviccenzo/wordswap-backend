@@ -41,6 +41,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
+@Log4j2
 @Service
 @Transactional
 @AllArgsConstructor
