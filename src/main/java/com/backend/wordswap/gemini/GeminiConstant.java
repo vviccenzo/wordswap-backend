@@ -7,9 +7,9 @@ public class GeminiConstant {
 
 	public static final String API_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=%s";
 
-	public static final String PROMPT_TRANSLATE = "Agora, preciso que você traduza a seguinte mensagem: '%s', para o idioma: %s. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Caso não haja contexto, utilize o tom formal. Retorne apenas a tradução de '%s' e nada mais.";
+	public static final String PROMPT_TRANSLATE = "Agora, preciso que você traduza a seguinte mensagem: '%s', para o idioma: %s. Retorne apenas a tradução de '%s' e nada mais.";
 
-	public static final String PROMPT_IMPROVE = "Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: %s. Baseie-se no contexto e escolha o tom apropriado (formal ou informal). Caso não haja contexto, utilize o tom formal. Retorne apenas a mensagem melhorada e nada mais.";
+	public static final String PROMPT_IMPROVE = "Agora, preciso que você melhore a seguinte mensagem em termos de ortografia e gramática: %s. Retorne apenas a mensagem melhorada e nada mais.";
 
 	public static final String PROMPT_VALIDATE = "Valide a seguinte mensagem: '%s'. Se for uma saudação simples, frase comum ou texto sem caracteres suspeitos ou maliciosos, "
 	        + "devolva 'Mensagem Válida'. Concentre-se em detectar apenas padrões perigosos, como tentativas de SQL Injection, comandos de sistema, linguagem com cunho sexual, "
