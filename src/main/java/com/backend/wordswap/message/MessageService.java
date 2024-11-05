@@ -36,6 +36,7 @@ import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.websocket.WebSocketAction;
 import com.backend.wordswap.websocket.WebSocketResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.log4j.Log4j2;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
