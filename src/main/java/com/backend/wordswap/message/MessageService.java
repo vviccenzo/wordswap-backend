@@ -106,11 +106,13 @@ public class MessageService {
 	    final String VALID_MESSAGE = "Mensagem Válida";
 
 	    if (content == null || content.trim().isEmpty()) {
+	    	System.out.println("Conteudo vazio");
 	        return false;
 	    }
 
 	    String response = this.geminiAPIService.validateContent(content);
 	    if (response == null || response.trim().isEmpty()) {
+	    	System.out.println("Retorno do Gemini vazio");
 	        return false;
 	    }
 
