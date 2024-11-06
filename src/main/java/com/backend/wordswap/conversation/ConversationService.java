@@ -44,7 +44,7 @@ public class ConversationService {
 		UserModel user = this.userRepository.findById(userId).orElseThrow();
 		Set<Long> conversationIds = this.getAllConversationIds(user);
 
-		Pageable pageable = PageRequest.of(pageNumber, 30, Sort.by(Sort.Direction.DESC, "sentAt"));
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "sentAt"));
 		Map<Long, Long> totalMessagesByConversation = this.getTotalMessagesByConversation(conversationIds);
 		Map<Long, List<MessageModel>> messageByConversation = this.getMessageGroupedByConversation(conversationIds, pageable);
 
