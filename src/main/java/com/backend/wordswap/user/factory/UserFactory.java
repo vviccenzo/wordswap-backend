@@ -120,8 +120,8 @@ public class UserFactory {
 		profile.setUpdateDate(LocalDate.now());
 		profile.setUser(user);
 
-		if(user != null && user.getProfilePic() != null && user.getProfilePic().getId() != null) {
-			profile.setId(user.getProfilePic().getId());
+		if(user != null && user.getUserProfile() != null && user.getUserProfile().getId() != null) {
+			profile.setId(user.getUserProfile().getId());
 		}
 
 		return profile;
