@@ -64,9 +64,9 @@ public class UserService {
 		UserModel savedModel = this.userRepository.save(updatedModel);
 
 	    if (dto.getFile() != null) {
-	        UserProfileModel profilePic = UserFactory.createUserProfile(dto.getFile(), updatedModel);
-	        this.userProfileRepository.save(profilePic);
-	        updatedModel.setUserProfile(profilePic);
+			UserProfileModel profilePic = UserFactory.createUserProfile(dto.getFile(), updatedModel);
+			profilePic = this.userProfileRepository.save(profilePic); // Salva o perfil e retorna a versão persistida
+			updatedModel.setUserProfile(profilePic);
 	    }
 
 		savedModel.setName(dto.getName());
