@@ -13,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.backend.wordswap.conversation.dto.ConversartionArchiveDTO;
 import com.backend.wordswap.conversation.dto.ConversartionDeleteDTO;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationService;

@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.friendshipRequest.FriendshipRequestService;
 import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.websocket.definition.WebSocketErrorResponse;
@@ -15,6 +16,8 @@ import lombok.AllArgsConstructor;
 @Controller
 @AllArgsConstructor
 public class WebSocketController {
+	
+	private final ConversationService conversationService;
 
 	private final MessageService messageService;
 
@@ -44,10 +47,17 @@ public class WebSocketController {
 	            case UPDATE_FRIEND_REQUEST:
 	                this.friendshipRequestService.changeStatus(request.getFriendshipRequestUpdateDTO());
 	                break;
+	            case CREATE_GROUP:
+	            	this.conversationService.createGroup(request.getConversationGroupCreateDTO());
+	            	break;
+	            case VIEW_MESSAGE:
+	            	this.messageService.viewMessages(request.getMessageViewDTO());
+	            	break;
 	            default:
 	                throw new IllegalArgumentException("Ação desconhecida: " + request.getAction());
 	        }
 	    } catch (Exception e) {
+	    	e.printStackTrace();
 	        this.sendErrorMessage(roomId, e.getMessage());
 	    }
 	}

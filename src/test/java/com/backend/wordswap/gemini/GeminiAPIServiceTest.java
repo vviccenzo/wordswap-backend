@@ -20,7 +20,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-@TestPropertySource(properties = {"gemini.key=test-gemini-key"})
+@TestPropertySource(properties = { "gemini.key=test-gemini-key" })
 class GeminiAPIServiceTest {
 
 	@InjectMocks
@@ -36,81 +36,77 @@ class GeminiAPIServiceTest {
 
 	@Test
 	void testTranslateText() throws Exception {
-	    String text = "Hello, world!";
-	    String language = "es";
-	    String context = "greeting";
-	    
-	    String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
+		String text = "Hello, world!";
+		String language = "es";
 
-	    String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"¡Hola, mundo!\"}]}}]}";
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
 
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.set("Content-Type", "application/json");
+		String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"¡Hola, mundo!\"}]}}]}";
 
-	    ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
-	    
-	    when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-	        .thenReturn(mockResponse);
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
 
-	    ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
+		ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
 
-	    String actualResponse = geminiAPIService.translateText(text, language, context);
+		when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+				.thenReturn(mockResponse);
 
-	    assertEquals("¡Hola, mundo!", actualResponse);
+		ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
+
+		String actualResponse = geminiAPIService.translateText(text, language);
+
+		assertEquals("¡Hola, mundo!", actualResponse);
 	}
-
 
 	@Test
 	void testImproveText() throws Exception {
-	    String text = "This is a test.";
-	    String context = "improving";
-	    String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
-	    
-	    String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"This is a better test.\"}]}}]}";
+		String text = "This is a test.";
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
 
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.set("Content-Type", "application/json");
+		String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"This is a better test.\"}]}}]}";
 
-	    ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
-	    when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-	        .thenReturn(mockResponse);
-	    
-	    ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Content-Type", "application/json");
 
-	    String actualResponse = geminiAPIService.improveText(text, context);
+		ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
+		when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+				.thenReturn(mockResponse);
 
-	    assertEquals("This is a better test.", actualResponse);
+		ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
+
+		String actualResponse = geminiAPIService.improveText(text);
+
+		assertEquals("This is a better test.", actualResponse);
 	}
 
 	@Test
 	void testValidateContent() throws Exception {
-	    String content = "Sample content to validate.";
-	    String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
+		String content = "Sample content to validate.";
+		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, "test-gemini-key");
 
-	    String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Content is valid.\"}]}}]}";
+		String expectedResponse = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Content is valid.\"}]}}]}";
 
-	    ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
-	    when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
-	            .thenReturn(mockResponse);
-	    
-	    ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
+		ResponseEntity<String> mockResponse = ResponseEntity.ok(expectedResponse);
+		when(restTemplate.exchange(eq(apiUrl), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
+				.thenReturn(mockResponse);
 
-	    String actualResponse = geminiAPIService.validateContent(content);
+		ReflectionTestUtils.setField(geminiAPIService, "geminiKey", "test-gemini-key");
 
-	    assertEquals("Content is valid.", actualResponse);
+		String actualResponse = geminiAPIService.validateContent(content);
+
+		assertEquals("Content is valid.", actualResponse);
 	}
 
 	@Test
 	void testTranslateTextFallback() throws Exception {
 		String text = "Hello, world!";
 		String language = "es";
-		String context = "greeting";
 
 		when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class)))
 				.thenThrow(new RuntimeException("Service unavailable"));
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			geminiAPIService.translateText(text, language, context);
+			geminiAPIService.translateText(text, language);
 		});
 
 		assertEquals("Service unavailable", exception.getMessage());

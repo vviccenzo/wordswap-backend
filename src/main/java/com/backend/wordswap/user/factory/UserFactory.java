@@ -58,12 +58,9 @@ public class UserFactory {
 	}
 
 	private static Long findConversationId(UserModel user, Long currentUserId) {
-		return user.getInitiatedConversations().stream()
-				.filter(conversation -> conversation.getUserRecipient().getId().equals(currentUserId))
-				.map(ConversationModel::getId).findFirst()
-				.orElseGet(() -> user.getReceivedConversations().stream()
-						.filter(conversation -> conversation.getUserInitiator().getId().equals(currentUserId))
-						.map(ConversationModel::getId).findFirst().orElse(null));
+		return user.getConversations().stream()
+				.filter(conversation -> conversation.getParticipants().stream().anyMatch(participant -> participant.getId().equals(currentUserId)))
+				.map(ConversationModel::getId).findFirst().orElse(null);
 	}
 
 	private static String getBio(UserModel user) {
@@ -87,7 +84,7 @@ public class UserFactory {
 		}
 	}
 
-	public static void populateUserCreateData(UserCreateDTO dto, UserModel model) throws IOException {
+	public static void populateUserCreateData(UserCreateDTO dto, UserModel model) {
 		model.setUsername(dto.getUsername());
 		model.setEmail(dto.getEmail());
 		model.setPassword(BCryptUtil.encryptPassword(dto.getPassword()));

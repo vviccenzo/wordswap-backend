@@ -18,6 +18,8 @@ public class MessageCreateDTO {
 	private Long conversationId = 0L;
 
 	private int pageNumber;
+	
+	private String conversationCode;
 
 	private String content;
 

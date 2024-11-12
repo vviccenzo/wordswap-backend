@@ -24,8 +24,8 @@ class ConversationModelTest {
 	@BeforeEach
 	void setUp() {
 		this.conversation = new ConversationModel();
-		this.conversation.setUserInitiator(new UserModel());
-		this.conversation.setUserRecipient(new UserModel());
+//		this.conversation.setUserInitiator(new UserModel());
+//		this.conversation.setUserRecipient(new UserModel());
 		this.conversation.setMessages(new ArrayList<>());
 		this.conversation.setTranslationConfigurations(new ArrayList<>());
 		this.conversation.setCreatedDate(LocalDate.now());

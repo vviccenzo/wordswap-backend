@@ -28,7 +28,7 @@ public class GeminiAPIService {
 	public String geminiKey;
 
 	@Retry(name = "geminiService", fallbackMethod = "fallbackTranslate")
-	public String translateText(String text, String language, String context) throws JsonProcessingException {
+	public String translateText(String text, String language) throws JsonProcessingException {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, geminiKey);
 
 		HttpHeaders headers = new HttpHeaders();
@@ -53,7 +53,7 @@ public class GeminiAPIService {
 		return GeminiUtils.extractTextFromResponse(response.getBody());
 	}
 
-	public String improveText(String text, String context) throws JsonProcessingException {
+	public String improveText(String text) throws JsonProcessingException {
 		String apiUrl = String.format(GeminiConstant.API_URL_TEMPLATE, geminiKey);
 
 		HttpHeaders headers = new HttpHeaders();

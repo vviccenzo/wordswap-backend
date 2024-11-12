@@ -9,12 +9,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
 import com.backend.wordswap.conversation.entity.ConversationModel;
@@ -32,16 +33,17 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ConversationFactory {
-	
-	public static List<ConversationResponseDTO> buildConversationsResponse(UserModel user, Map<Long, List<MessageModel>> messageByConversation, Long userId, Map<Long, Long> totalMessagesByConversation) {
-		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
-		user.getInitiatedConversations().stream().filter(conversation -> !conversation.getIsDeletedInitiator())
-				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
-				.forEach(conversationResponseDTOS::add);
 
-		user.getReceivedConversations().stream().filter(conversation -> !conversation.getIsDeletedRecipient())
-				.map(conversation -> ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
-				.forEach(conversationResponseDTOS::add);
+	public static List<ConversationResponseDTO> buildConversationsResponse(UserModel user,
+			Map<Long, List<MessageModel>> messageByConversation, Long userId,
+			Map<Long, Long> totalMessagesByConversation) 
+	{
+
+		List<ConversationResponseDTO> conversationResponseDTOS = new ArrayList<>();
+
+		user.getConversations().stream().map(conversation -> 
+				ConversationFactory.buildMessages(userId, conversation, messageByConversation, totalMessagesByConversation))
+		.forEach(conversationResponseDTOS::add);
 
 		conversationResponseDTOS.sort((c1, c2) -> {
 			LocalDateTime lastMessageC1 = c1.getLastMessage().keySet().stream().findFirst().orElse(LocalDateTime.MIN);
@@ -53,92 +55,114 @@ public class ConversationFactory {
 		return conversationResponseDTOS;
 	}
 
-	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation, Map<Long, Long> totalMessagesByConversation) {
+	public static ConversationResponseDTO buildMessages(Long userId, ConversationModel conv,
+			Map<Long, List<MessageModel>> messageByConversation, Map<Long, Long> totalMessagesByConversation) 
+	{
+
 		ConversationResponseDTO dto = new ConversationResponseDTO();
 		dto.setId(conv.getId());
-		dto.setSenderId(conv.getUserInitiator().getId());
-		dto.setReceiverId(conv.getUserRecipient().getId());
-		dto.setReceiverCode(conv.getUserRecipient().getUserCode());
-		dto.setSenderCode(conv.getUserInitiator().getUserCode());
 
-		boolean isInitiator = conv.getUserInitiator().getId().equals(userId);
-        Long userInitiator = conv.getUserInitiator().getId();
-        Long userRecipient = conv.getUserRecipient().getId();
+		Map<Long, TranslationConfigResponseDTO> configsUser = new HashMap<>();
+		for (UserModel participant : conv.getParticipants()) {
+			configsUser.put(participant.getId(), buildTranslationConfig(participant.getId(), conv));
+		}
 
-        Map<Long, TranslationConfigResponseDTO> configsUser = new HashMap<>();
-        configsUser.put(userInitiator, buildTranslationConfig(userInitiator, conv));
-        configsUser.put(userRecipient, buildTranslationConfig(userRecipient, conv));
-
-        dto.setConfigsUser(configsUser);
-		dto.setProfilePic(getProfilePic(conv, isInitiator));
-		dto.setUserInfo(buildInfo(conv, isInitiator));
-		dto.setConversationName(getConversationName(conv, isInitiator));
-		dto.setTotalMessages(totalMessagesByConversation.getOrDefault(conv.getId(), 0L).intValue());
+		dto.setConfigsUser(configsUser);
 		
-		List<MessageRecord> userMessages = getDecryptedMessages(conv, userId, true, messageByConversation);
-		List<MessageRecord> targetUserMessages = getDecryptedMessages(conv, userId, false, messageByConversation);
+		dto.setType(conv.getType());
+		dto.setProfilePic(getProfilePic(conv, userId));
+		dto.setUserInfo(buildInfo(conv, userId));
+		dto.setTotalMessages(totalMessagesByConversation.getOrDefault(conv.getId(), 0L).intValue());
+		if(StringUtils.isNotBlank(conv.getConversationName())) {
+			dto.setConversationName(conv.getConversationName());
+		} else {
+			dto.setConversationName(getConversationName(conv, userId));
+		}
 
-		dto.setUserMessages(userMessages);
-		dto.setTargetUserMessages(targetUserMessages);
-		dto.setLastMessage(determineLastMessage(userMessages, targetUserMessages));
+		List<MessageRecord> messages = getDecryptedMessages(conv, messageByConversation);
+
+		dto.setMessages(messages);
+		dto.setLastMessage(determineLastMessage(messages, messages));
 
 		return dto;
 	}
-	
-	public static UserDTO buildInfo(ConversationModel conversationModel, boolean isInitiator) {
-		return isInitiator ? new UserDTO(conversationModel.getUserRecipient()) : new UserDTO(conversationModel.getUserInitiator());
+
+	public static UserDTO buildInfo(ConversationModel conversationModel, Long userId) {
+		return conversationModel.getParticipants().stream().filter(participant -> !participant.getId().equals(userId))
+				.map(UserDTO::new).findFirst().orElse(null);
 	}
 
-	public static String getProfilePic(ConversationModel conversationModel, boolean isInitiator) {
-	    UserModel user = isInitiator ? conversationModel.getUserRecipient() : conversationModel.getUserInitiator();
+	public static String getProfilePic(ConversationModel conversationModel, Long userId) {
+		UserModel user = conversationModel.getParticipants().stream()
+				.filter(participant -> !participant.getId().equals(userId)).findFirst().orElse(null);
 
-	    if (Objects.nonNull(user) && Objects.nonNull(user.getUserProfile()) && Objects.nonNull(user.getUserProfile().getContent())) {
-	        return convertByteArrayToBase64(user.getUserProfile().getContent());
-	    }
-	    
-	    return "";
+		if (user != null && user.getUserProfile() != null && user.getUserProfile().getContent() != null) {
+			return convertByteArrayToBase64(user.getUserProfile().getContent());
+		}
+
+		return "";
+	}
+
+	public static String getConversationName(ConversationModel conv, Long userId) {
+		List<String> participantNames = conv.getParticipants().stream()
+				.filter(participant -> !participant.getId().equals(userId)).map(UserModel::getName).toList();
+
+		return String.join(", ", participantNames);
 	}
 
 	public static String convertByteArrayToBase64(byte[] imageBytes) {
 		return Base64.getEncoder().encodeToString(imageBytes);
 	}
 
-	public static String getConversationName(ConversationModel conv, boolean isInitiator) {
-		return isInitiator ? conv.getUserRecipient().getName() : conv.getUserInitiator().getName();
-	}
-
-	public static List<MessageRecord> getDecryptedMessages(ConversationModel conv, Long userId, boolean isUserMessages, Map<Long, List<MessageModel>> messageByConversation) {
+	public static List<MessageRecord> getDecryptedMessages(ConversationModel conv, Map<Long, List<MessageModel>> messageByConversation) {
 		List<MessageModel> messages = messageByConversation.getOrDefault(conv.getId(), new ArrayList<>());
 		List<MessageRecord> decryptedMessages = new ArrayList<>();
 
 		for (MessageModel message : messages) {
-			if (message.getSender().getId().equals(userId) == isUserMessages) {
-				decryptedMessages.add(decryptMessage(message));
-			}
+			decryptedMessages.add(decryptMessage(message));
 		}
 
 		return decryptedMessages;
 	}
 
 	public static MessageRecord decryptMessage(MessageModel msg) {
-		try {
-			String decryptedContent = Encrypt.decrypt(msg.getContent());
-			MessageContent messageContent = new MessageContent(decryptedContent, decryptedContent);
-			String image = msg.getImage() != null && msg.getImage().getContent() != null ? Base64.getEncoder().encodeToString(msg.getImage().getContent()) : "";
+	    try {
+	        String decryptedContent = decryptContent(msg.getContent());
+	        String decryptedOriginalContent = decryptOriginalContent(msg.getContentOriginal());
+	        MessageContent messageContent = new MessageContent(decryptedContent, decryptedOriginalContent);
+	        String image = encodeImageToBase64(msg);
 
-			return MessageRecord.builder()
-					.id(msg.getId())
-					.content(decryptedContent)
-					.sender(msg.getSender().getUsername())
-					.timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
-					.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
-					.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false))
-					.messageContent(messageContent)
-					.image(image)
-					.build();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
-			throw new ConvervationMessageBuildException(e);
-		}
+	        return buildMessageRecord(msg, decryptedContent, decryptedOriginalContent, messageContent, image);
+	    } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException 
+	             | IllegalBlockSizeException | BadPaddingException e) {
+	        throw new ConvervationMessageBuildException(e);
+	    }
+	}
+
+	private static String decryptContent(String content) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		return Encrypt.decrypt(content);
+	}
+
+	private static String decryptOriginalContent(String contentOriginal) throws InvalidKeyException,
+			NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+		return StringUtils.isNotBlank(contentOriginal) ? Encrypt.decrypt(contentOriginal) : "";
+	}
+
+	private static String encodeImageToBase64(MessageModel msg) {
+		return Optional.ofNullable(msg.getImage()).map(image -> image.getContent())
+				.map(content -> Base64.getEncoder().encodeToString(content)).orElse("");
+	}
+
+	private static MessageRecord buildMessageRecord(MessageModel msg, String decryptedContent,
+			String decryptedOriginalContent, MessageContent messageContent, String image) {
+		return MessageRecord.builder().id(msg.getId()).content(decryptedContent).sender(msg.getSender().getUsername())
+				.timeStamp(msg.getSentAt()).senderId(msg.getSender().getId())
+				.isEdited(Optional.ofNullable(msg.getIsEdited()).orElse(false))
+				.viewed(Optional.ofNullable(msg.getViewed()).orElse(false))
+				.viewedTime(Optional.ofNullable(msg.getViewedAt()).orElse(null))
+				.isDeleted(Optional.ofNullable(msg.getIsDeleted()).orElse(false)).messageContent(messageContent)
+				.originalContent(decryptedOriginalContent).image(image).build();
 	}
 
 	public static Map<LocalDateTime, String> determineLastMessage(List<MessageRecord> user, List<MessageRecord> target) {

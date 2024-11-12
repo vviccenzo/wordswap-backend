@@ -25,7 +25,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -35,7 +34,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-@EqualsAndHashCode(callSuper = true)
 public class UserModel extends GenericModel {
 
 	@Column(name = "username", unique = true)
@@ -49,10 +47,10 @@ public class UserModel extends GenericModel {
 
 	@Column(name = "user_code", unique = true)
 	private String userCode;
-	
+
 	@Column(name = "name")
 	private String name;
-	
+
 	@Column(name = "bio")
 	private String bio;
 
@@ -75,11 +73,23 @@ public class UserModel extends GenericModel {
 	@OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<FriendshipRequestModel> sentFriendshipRequests = new ArrayList<>();
 
-	@OneToMany(mappedBy = "userInitiator", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<ConversationModel> initiatedConversations = new ArrayList<>();
+	@ManyToMany(mappedBy = "participants", fetch = FetchType.LAZY)
+	private List<ConversationModel> conversations = new ArrayList<>();
 
-	@OneToMany(mappedBy = "userRecipient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<ConversationModel> receivedConversations = new ArrayList<>();
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null || getClass() != obj.getClass())
+			return false;
+		UserModel that = (UserModel) obj;
+		return getId() != null && getId().equals(that.getId());
+	}
+
+	@Override
+	public int hashCode() {
+		return getId() != null ? getId().hashCode() : 0;
+	}
 
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		if (this.role == UserRole.ADMIN) {

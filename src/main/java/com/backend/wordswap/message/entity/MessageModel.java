@@ -44,8 +44,14 @@ public class MessageModel extends GenericModel {
 	@Column(name = "message_content", columnDefinition = "TEXT" )
 	private String content;
 
+	@Column(name = "message_content_original", columnDefinition = "TEXT" )
+	private String contentOriginal;
+
 	@Column(name = "sent_at")
 	private LocalDateTime sentAt;
+
+	@Column(name = "viewed_at")
+	private LocalDateTime viewedAt;
 
 	@Column(name = "is_edited")
 	private Boolean isEdited;
@@ -55,6 +61,9 @@ public class MessageModel extends GenericModel {
 
 	@Column(name = "is_translated")
 	private Boolean isTranslated;
+
+	@Column(name = "viewed")
+	private Boolean viewed;
 
 	public MessageModel(String content, UserModel sender, ConversationModel conversation) {
 		this.content = content;

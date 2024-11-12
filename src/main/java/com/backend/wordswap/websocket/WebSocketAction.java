@@ -14,6 +14,10 @@ public enum WebSocketAction {
 
 	ACCEPT_FRIEND_REQUEST,
 
-	DELETE_FRIEND;
+	DELETE_FRIEND,
+	
+	CREATE_GROUP,
+	
+	VIEW_MESSAGE;
 
 }

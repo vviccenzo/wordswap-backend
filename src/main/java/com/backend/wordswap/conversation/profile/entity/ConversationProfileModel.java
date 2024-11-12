@@ -1,9 +1,9 @@
-package com.backend.wordswap.user.profile.entity;
+package com.backend.wordswap.conversation.profile.entity;
 
 import java.time.LocalDate;
 
+import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
-import com.backend.wordswap.user.entity.UserModel;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -19,12 +19,12 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user_profile")
-public class UserProfileModel extends GenericModel {
+@Table(name = "conversation_profile")
+public class ConversationProfileModel extends GenericModel {
 
 	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
-	private UserModel user;
+	@JoinColumn(name = "conversation_id", referencedColumnName = "id", nullable = true)
+	private ConversationModel conversation;
 
 	@Column(name = "content")
 	private byte[] content;
@@ -37,7 +37,7 @@ public class UserProfileModel extends GenericModel {
 
 	@Override
 	public String toString() {
-		return "UserProfileModel{" + "id=" + getId() + ", fileName='" + fileName + '\'' + ", updateDate=" + updateDate
+		return "ConversationProfileModel{" + "id=" + getId() + ", fileName='" + fileName + '\'' + ", updateDate=" + updateDate
 				+ '}';
 	}
 
@@ -47,7 +47,7 @@ public class UserProfileModel extends GenericModel {
 			return true;
 		if (obj == null || getClass() != obj.getClass())
 			return false;
-		UserProfileModel that = (UserProfileModel) obj;
+		ConversationProfileModel that = (ConversationProfileModel) obj;
 		return getId() != null && getId().equals(that.getId());
 	}
 

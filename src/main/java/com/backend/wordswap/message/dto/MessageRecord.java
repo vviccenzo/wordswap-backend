@@ -26,11 +26,19 @@ public class MessageRecord {
 
 	private String image;
 
+	private String originalContent;
+
+	@JsonInclude(Include.NON_EMPTY)
 	private LocalDateTime timeStamp;
+
+	@JsonInclude(Include.NON_EMPTY)
+	private LocalDateTime viewedTime;
 
 	private boolean isEdited;
 
 	private boolean isDeleted;
+	
+	private boolean viewed;
 
 	@JsonInclude(Include.NON_NULL)
 	private MessageContent messageContent;

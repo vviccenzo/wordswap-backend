@@ -82,7 +82,7 @@ class WebSocketControllerTest {
 	@Test
 	void testHandleWebSocketActionDeleteFriend() throws Exception {
 		webSocketRequest.setAction(WebSocketAction.DELETE_FRIEND);
-		webSocketRequest.setFriendshipDeleteRequestDTO(new FriendshipDeleteRequestDTO(1L, 2L));
+		webSocketRequest.setFriendshipDeleteRequestDTO(new FriendshipDeleteRequestDTO(1L, 2L, ""));
 
 		webSocketController.handleWebSocketAction("roomId", webSocketRequest);
 

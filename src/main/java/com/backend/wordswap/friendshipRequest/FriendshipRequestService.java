@@ -1,8 +1,10 @@
 package com.backend.wordswap.friendshipRequest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.backend.wordswap.conversation.ConversationRepository;
 import com.backend.wordswap.conversation.ConversationService;
 import com.backend.wordswap.conversation.dto.ConversationResponseDTO;
+import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.friendshipRequest.dto.FriendshipDTO;
 import com.backend.wordswap.friendshipRequest.dto.FriendshipDeleteRequestDTO;
 import com.backend.wordswap.friendshipRequest.dto.FriendshipRequestCreateDTO;
@@ -32,14 +35,14 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class FriendshipRequestService {
-	
+
 	private final SimpMessagingTemplate messagingTemplate;
 	private final UserService userService;
 	private final ConversationService conversationService;
 
 	private final UserRepository userRepository;
 	private final FriendshipRequestRepository friendshipRequestRepository;
-	private final ConversationRepository conversationRepository; 
+	private final ConversationRepository conversationRepository;
 
 	public void sendInvite(FriendshipRequestCreateDTO dto, WebSocketAction socketAction) {
 
@@ -74,7 +77,8 @@ public class FriendshipRequestService {
 	}
 
 	private boolean validateRequest(FriendshipRequestCreateDTO dto) {
-		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
+		Optional<FriendshipRequestModel> optRequest = this.friendshipRequestRepository
+				.findBySenderIdAndTargetUserCode(dto.getSenderId(), dto.getTargetUserCode());
 		if (optRequest.isPresent()) {
 			throw new FriendshipAlreadySendedException("Friendship already sended.");
 		}
@@ -99,6 +103,13 @@ public class FriendshipRequestService {
 
 			this.userRepository.saveAll(List.of(user1, user2));
 
+			ConversationModel conversation = new ConversationModel();
+			conversation.setConversationCode(LocalDate.now().toString() + "_" + UUID.randomUUID().toString());
+			conversation.setCreatedDate(LocalDate.now());
+			conversation.setParticipants(List.of(user1, user2));
+
+			this.conversationRepository.save(conversation);
+
 			List<UserDTO> friendsSender = this.userService.findFriendsByUserId(user1.getId());
 			List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user2.getId());
 
@@ -119,26 +130,30 @@ public class FriendshipRequestService {
 
 	@Transactional
 	public void deleteFriendship(FriendshipDeleteRequestDTO dto) {
-		UserModel user = this.userRepository.findById(dto.userId()).orElseThrow(() -> new UserNotFoundException("User not found."));
+		UserModel user = this.userRepository.findById(dto.userId())
+				.orElseThrow(() -> new UserNotFoundException("User not found."));
 
 		boolean removed = user.getFriends().removeIf(friend -> friend.getId().equals(dto.friendId()));
 		if (!removed) {
 			throw new UserNotFoundException("Friendship not found.");
 		}
 
-		UserModel friend = this.userRepository.findById(dto.friendId()).orElseThrow(() -> new UserNotFoundException("Friend not found."));
+		UserModel friend = this.userRepository.findById(dto.friendId())
+				.orElseThrow(() -> new UserNotFoundException("Friend not found."));
 
 		friend.getFriends().removeIf(friendToDelete -> friendToDelete.getId().equals(dto.userId()));
 
 		this.userRepository.saveAll(List.of(user, friend));
 		this.friendshipRequestRepository.deleteAllByFriendship(user.getId(), friend.getId());
-		this.conversationRepository.deleteAllByFriendship(user.getId(), friend.getId());
+//		this.conversationRepository.deleteAllByFriendship();
 
 		List<UserDTO> friendsSender = this.userService.findFriendsByUserId(friend.getId());
 		List<UserDTO> friendsTarget = this.userService.findFriendsByUserId(user.getId());
 
-        List<ConversationResponseDTO> convSender = this.conversationService.findAllConversationByUserId(user.getId(), 0);
-        List<ConversationResponseDTO> convReceiver = this.conversationService.findAllConversationByUserId(friend.getId(), 0);
+		List<ConversationResponseDTO> convSender = this.conversationService.findAllConversationByUserId(user.getId(),
+				0);
+		List<ConversationResponseDTO> convReceiver = this.conversationService
+				.findAllConversationByUserId(friend.getId(), 0);
 
 		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + friend.getId(),
 				new WebSocketResponse<List<UserDTO>>(WebSocketAction.ACCEPT_FRIEND_REQUEST, friendsSender));
