@@ -36,7 +36,6 @@ import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
-import com.backend.wordswap.websocket.WebSocketAction;
 
 class FriendshipRequestServiceTest {
 
@@ -92,7 +91,7 @@ class FriendshipRequestServiceTest {
 
 		when(this.friendshipRequestRepository.save(any(FriendshipRequestModel.class))).thenReturn(savedRequest);
 
-		this.friendshipRequestService.sendInvite(dto, WebSocketAction.SEND_FRIEND_REQUEST);
+		this.friendshipRequestService.sendInvite(dto);
 
 		verify(this.friendshipRequestRepository, times(1)).save(any(FriendshipRequestModel.class));
 	}
@@ -105,7 +104,7 @@ class FriendshipRequestServiceTest {
 
 		when(this.userRepository.findById(dto.getSenderId())).thenReturn(Optional.empty());
 
-		assertThrows(UserNotFoundException.class, () -> this.friendshipRequestService.sendInvite(dto, WebSocketAction.SEND_FRIEND_REQUEST));
+		assertThrows(UserNotFoundException.class, () -> this.friendshipRequestService.sendInvite(dto));
 	}
 
 	@Test
@@ -129,7 +128,7 @@ class FriendshipRequestServiceTest {
 		when(this.friendshipRequestRepository.findBySenderIdAndTargetUserCode(dto.getSenderId(),
 				dto.getTargetUserCode())).thenReturn(Optional.of(existingRequest));
 
-		assertThrows(FriendshipAlreadySendedException.class, () -> this.friendshipRequestService.sendInvite(dto, WebSocketAction.SEND_FRIEND_REQUEST));
+		assertThrows(FriendshipAlreadySendedException.class, () -> this.friendshipRequestService.sendInvite(dto));
 	}
 
 	@Test

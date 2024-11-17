@@ -1,4 +1,4 @@
-package com.backend.wordswap.gemini;
+package com.backend.wordswap.gemini.definition;
 
 import lombok.experimental.UtilityClass;
 

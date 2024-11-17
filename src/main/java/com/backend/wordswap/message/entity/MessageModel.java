@@ -6,7 +6,6 @@ import java.time.ZonedDateTime;
 
 import com.backend.wordswap.conversation.entity.ConversationModel;
 import com.backend.wordswap.generic.entity.GenericModel;
-import com.backend.wordswap.message.MessageImageModel;
 import com.backend.wordswap.user.entity.UserModel;
 
 import jakarta.persistence.CascadeType;

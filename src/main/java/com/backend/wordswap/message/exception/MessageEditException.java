@@ -1,4 +1,4 @@
-package com.backend.wordswap.message;
+package com.backend.wordswap.message.exception;
 
 public class MessageEditException extends RuntimeException {
 

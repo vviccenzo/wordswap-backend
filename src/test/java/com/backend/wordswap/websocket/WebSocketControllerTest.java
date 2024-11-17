@@ -1,7 +1,6 @@
 package com.backend.wordswap.websocket;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,8 @@ import com.backend.wordswap.message.MessageService;
 import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
+import com.backend.wordswap.websocket.definition.WebSocketAction;
+import com.backend.wordswap.websocket.definition.WebSocketRequest;
 
 class WebSocketControllerTest {
 
@@ -76,7 +77,7 @@ class WebSocketControllerTest {
 
 		webSocketController.handleWebSocketAction("roomId", webSocketRequest);
 
-		verify(friendshipRequestService).sendInvite(any(FriendshipRequestCreateDTO.class), eq(WebSocketAction.SEND_FRIEND_REQUEST));
+		verify(friendshipRequestService).sendInvite(any(FriendshipRequestCreateDTO.class));
 	}
 
 	@Test

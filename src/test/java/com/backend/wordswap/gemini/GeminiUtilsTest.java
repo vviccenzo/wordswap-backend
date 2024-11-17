@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+import com.backend.wordswap.gemini.definition.GeminiConstant;
+import com.backend.wordswap.gemini.utils.GeminiUtils;
+
 class GeminiUtilsTest {
 
 	@Test

@@ -25,9 +25,9 @@ import com.backend.wordswap.user.UserService;
 import com.backend.wordswap.user.dto.UserDTO;
 import com.backend.wordswap.user.entity.UserModel;
 import com.backend.wordswap.user.exception.UserNotFoundException;
-import com.backend.wordswap.websocket.WebSocketAction;
-import com.backend.wordswap.websocket.WebSocketConstant;
-import com.backend.wordswap.websocket.WebSocketResponse;
+import com.backend.wordswap.websocket.definition.WebSocketAction;
+import com.backend.wordswap.websocket.definition.WebSocketConstant;
+import com.backend.wordswap.websocket.definition.WebSocketResponse;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -44,7 +44,7 @@ public class FriendshipRequestService {
 	private final FriendshipRequestRepository friendshipRequestRepository;
 	private final ConversationRepository conversationRepository;
 
-	public void sendInvite(FriendshipRequestCreateDTO dto, WebSocketAction socketAction) {
+	public void sendInvite(FriendshipRequestCreateDTO dto) {
 
 		this.validateRequest(dto);
 
@@ -71,9 +71,9 @@ public class FriendshipRequestService {
 		List<FriendshipDTO> requestsTarget = this.findAllByUserId(optTarget.get().getId());
 
 		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + dto.getSenderId(),
-				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsSender));
+				new WebSocketResponse<List<FriendshipDTO>>(WebSocketAction.SEND_FRIEND_REQUEST, requestsSender));
 		this.messagingTemplate.convertAndSend(WebSocketConstant.URL_TOPIC + optTarget.get().getId(),
-				new WebSocketResponse<List<FriendshipDTO>>(socketAction, requestsTarget));
+				new WebSocketResponse<List<FriendshipDTO>>(WebSocketAction.SEND_FRIEND_REQUEST, requestsTarget));
 	}
 
 	private boolean validateRequest(FriendshipRequestCreateDTO dto) {

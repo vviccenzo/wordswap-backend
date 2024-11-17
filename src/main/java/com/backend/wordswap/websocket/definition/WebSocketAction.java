@@ -1,4 +1,4 @@
-package com.backend.wordswap.websocket;
+package com.backend.wordswap.websocket.definition;
 
 public enum WebSocketAction {
 
@@ -15,9 +15,11 @@ public enum WebSocketAction {
 	ACCEPT_FRIEND_REQUEST,
 
 	DELETE_FRIEND,
-	
+
 	CREATE_GROUP,
-	
-	VIEW_MESSAGE;
+
+	VIEW_MESSAGE,
+
+	USER_TYPING;
 
 }

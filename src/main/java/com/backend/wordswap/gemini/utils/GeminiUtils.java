@@ -1,6 +1,7 @@
-package com.backend.wordswap.gemini;
+package com.backend.wordswap.gemini.utils;
 
 import com.backend.wordswap.chat.ChatResponse;
+import com.backend.wordswap.gemini.definition.GeminiConstant;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

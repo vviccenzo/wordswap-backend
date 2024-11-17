@@ -1,9 +1,8 @@
-package com.backend.wordswap.message;
+package com.backend.wordswap.message.entity;
 
 import java.time.LocalDate;
 
 import com.backend.wordswap.generic.entity.GenericModel;
-import com.backend.wordswap.message.entity.MessageModel;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

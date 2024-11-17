@@ -1,4 +1,4 @@
-package com.backend.wordswap.websocket;
+package com.backend.wordswap.websocket.definition;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

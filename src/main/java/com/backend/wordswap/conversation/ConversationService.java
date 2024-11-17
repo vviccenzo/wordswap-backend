@@ -28,8 +28,8 @@ import com.backend.wordswap.message.dto.MessageCreateDTO;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
-import com.backend.wordswap.websocket.WebSocketAction;
-import com.backend.wordswap.websocket.WebSocketResponse;
+import com.backend.wordswap.websocket.definition.WebSocketAction;
+import com.backend.wordswap.websocket.definition.WebSocketResponse;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;

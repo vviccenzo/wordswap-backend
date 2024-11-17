@@ -20,6 +20,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.backend.wordswap.gemini.definition.GeminiConstant;
+
 @TestPropertySource(properties = { "gemini.key=test-gemini-key" })
 class GeminiAPIServiceTest {
 

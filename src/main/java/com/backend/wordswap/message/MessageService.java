@@ -30,14 +30,16 @@ import com.backend.wordswap.message.dto.MessageDeleteDTO;
 import com.backend.wordswap.message.dto.MessageEditDTO;
 import com.backend.wordswap.message.dto.MessageRequestDTO;
 import com.backend.wordswap.message.dto.MessageViewDTO;
+import com.backend.wordswap.message.entity.MessageImageModel;
 import com.backend.wordswap.message.entity.MessageModel;
 import com.backend.wordswap.translation.configuration.TranslationConfigurationRepository;
 import com.backend.wordswap.translation.configuration.entity.TranslationConfigurationModel;
 import com.backend.wordswap.translation.configuration.enumeration.TranslationType;
 import com.backend.wordswap.user.UserRepository;
 import com.backend.wordswap.user.entity.UserModel;
-import com.backend.wordswap.websocket.WebSocketAction;
-import com.backend.wordswap.websocket.WebSocketResponse;
+import com.backend.wordswap.websocket.definition.MessageTypingDTO;
+import com.backend.wordswap.websocket.definition.WebSocketAction;
+import com.backend.wordswap.websocket.definition.WebSocketResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -63,18 +65,19 @@ public class MessageService {
 	public void sendMessage(MessageCreateDTO dto) throws Exception {
 		try {
 			ConversationModel conversation = this.conversationService.getOrCreateConversation(dto);
-			UserModel sender = this.userRepository.findById(dto.getSenderId()).orElseThrow(EntityNotFoundException::new);
-			
-			List<TranslationConfigurationModel> userConfigs = this.getReceiverTranslationConfigs(dto.getConversationId(),
-					conversation.getParticipantsIds());
-			
+			UserModel sender = this.userRepository.findById(dto.getSenderId())
+					.orElseThrow(EntityNotFoundException::new);
+
+			List<TranslationConfigurationModel> userConfigs = this
+					.getReceiverTranslationConfigs(dto.getConversationId(), conversation.getParticipantsIds());
+
 			AtomicReference<String> content = new AtomicReference<>(dto.getContent());
-			
+
 			Boolean hasConfigs = !CollectionUtils.isEmpty(userConfigs);
 			if (hasConfigs.booleanValue()) {
 				this.processContent(content, userConfigs);
 			}
-			
+
 			this.saveMessage(Encrypt.encrypt(content.get()), sender, conversation, dto, hasConfigs);
 			this.sendWebSocketUpdate(conversation.getParticipantsIds());
 		} catch (Exception e) {
@@ -82,81 +85,99 @@ public class MessageService {
 		}
 	}
 
-	private AtomicReference<String> processContent(AtomicReference<String> content, List<TranslationConfigurationModel> userConfigs) throws Exception {
-	    String validatedContent = content.get();
+	private AtomicReference<String> processContent(AtomicReference<String> content,
+			List<TranslationConfigurationModel> userConfigs) throws Exception {
+		String validatedContent = content.get();
 
-	    TranslationConfigurationModel configReceiver = this.getTranslationConfig(userConfigs, TranslationType.RECEIVING);
-	    TranslationConfigurationModel configImproving = this.getTranslationConfig(userConfigs, TranslationType.IMPROVING);
+		TranslationConfigurationModel configReceiver = this.getTranslationConfig(userConfigs,
+				TranslationType.RECEIVING);
+		TranslationConfigurationModel configImproving = this.getTranslationConfig(userConfigs,
+				TranslationType.IMPROVING);
 
-	    if (StringUtils.isNotBlank(validatedContent)) {
-	        validatedContent = this.applyConfigs(validatedContent, configReceiver, configImproving);
-	    }
+		if (StringUtils.isNotBlank(validatedContent)) {
+			validatedContent = this.applyConfigs(validatedContent, configReceiver, configImproving);
+		}
 
-	    content.set(validatedContent);
-	    return content;
+		content.set(validatedContent);
+		return content;
 	}
 
 	public boolean isValidContent(String content) throws JsonProcessingException {
-	    final String VALID_MESSAGE = "Mensagem Válida";
+		final String VALID_MESSAGE = "Mensagem Válida";
 
-	    if (content == null || content.trim().isEmpty()) {
-	        log.info("Conteudo vazio");
-	        return false;
-	    }
+		if (content == null || content.trim().isEmpty()) {
+			log.info("Conteudo vazio");
+			return false;
+		}
 
-	    String response = this.geminiAPIService.validateContent(content);
-	    if (response == null || response.trim().isEmpty()) {
-	        log.info("Retorno do Gemini vazio");
-	        return false;
-	    }
+		String response = "";
+		try {
+			response = this.geminiAPIService.validateContent(content);
+		} catch (Exception e) {
+			log.error("Ocorreu um erro inesperado");
+		}
 
-	    log.info("Retorno Gemini: " + response);
-	    return response.trim().equalsIgnoreCase(VALID_MESSAGE);
+		if (response == null || response.trim().isEmpty()) {
+			log.info("Retorno do Gemini vazio");
+			return false;
+		}
+
+		log.info("Retorno Gemini: " + response);
+		return response.trim().equalsIgnoreCase(VALID_MESSAGE);
 	}
 
-	private String applyConfigs(String content, TranslationConfigurationModel configReceiver, TranslationConfigurationModel configImproving) throws JsonProcessingException {
-	    int maxAttempts = 3;
-	    boolean isValid = false;
+	private String applyConfigs(String content, TranslationConfigurationModel configReceiver,
+			TranslationConfigurationModel configImproving) throws JsonProcessingException {
+		int maxAttempts = 3;
+		boolean isValid = false;
 
-	    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-	        if (this.isValidContent(content)) {
-	            isValid = true;
-	            break;
-	        }
-	    }
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			if (this.isValidContent(content)) {
+				isValid = true;
+				break;
+			}
+		}
 
-	    if (!isValid) {
-	        throw new RuntimeException("Envie uma mensagem válida, caso queira utilizar funções que usam Inteligência Artificial.");
-	    }
+		if (!isValid) {
+			throw new RuntimeException("Envie uma mensagem válida, caso queira utilizar funções que usam Inteligência Artificial.");
+		}
 
-	    content = this.applyTranslationOrImprovement(configImproving, configReceiver, content);
+		try {
+			content = this.applyTranslationOrImprovement(configImproving, configReceiver, content);
+		} catch (Exception e) {
+			log.error("Ocorreu um erro inesperado");
+		}
 
-	    return content;
+		return content;
 	}
 
-	private String applyTranslationOrImprovement(TranslationConfigurationModel configImproving, TranslationConfigurationModel configReceiver, String content) throws JsonProcessingException {
-	    if (configImproving != null && Boolean.TRUE.equals(configImproving.getIsActive())) {
-	        content = this.geminiAPIService.improveText(content);
-	    }
+	private String applyTranslationOrImprovement(TranslationConfigurationModel configImproving,
+			TranslationConfigurationModel configReceiver, String content) throws JsonProcessingException {
+		if (configImproving != null && Boolean.TRUE.equals(configImproving.getIsActive())) {
+			content = this.geminiAPIService.improveText(content);
+		}
 
-	    if (configReceiver != null && Boolean.TRUE.equals(configReceiver.getIsActive())) {
-	        content = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
-	    }
+		if (configReceiver != null && Boolean.TRUE.equals(configReceiver.getIsActive())) {
+			content = this.geminiAPIService.translateText(content, configReceiver.getTargetLanguage());
+		}
 
-	    return content;
+		return content;
 	}
 
 	public List<TranslationConfigurationModel> getReceiverTranslationConfigs(Long conversationId, Set<Long> userIds) {
-		return this.translationConfigRepository.findAllByConversationIdAndUserIdIn(conversationId, userIds).stream().toList();
+		return this.translationConfigRepository.findAllByConversationIdAndUserIdIn(conversationId, userIds).stream()
+				.toList();
 	}
 
-	public TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs, TranslationType type) {
-		return configs.stream().filter(config -> type.equals(config.getType()) && config.getIsActive()).findFirst().orElse(null);
+	public TranslationConfigurationModel getTranslationConfig(List<TranslationConfigurationModel> configs,
+			TranslationType type) {
+		return configs.stream().filter(config -> type.equals(config.getType()) && config.getIsActive()).findFirst()
+				.orElse(null);
 	}
 
-	private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation, MessageCreateDTO dto, Boolean hasConfigs) 
-			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException 
-	{
+	private void saveMessage(String encryptedContent, UserModel sender, ConversationModel conversation,
+			MessageCreateDTO dto, Boolean hasConfigs) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		MessageModel message = new MessageModel(encryptedContent, sender, conversation);
 		if (hasConfigs.booleanValue()) {
 			message.setContentOriginal(Encrypt.encrypt(dto.getContent()));
@@ -164,7 +185,8 @@ public class MessageService {
 
 		if (dto.getImageContent() != null) {
 			byte[] imageContent = Base64.getDecoder().decode(dto.getImageContent());
-			MessageImageModel image = new MessageImageModel(message, imageContent, dto.getImageFileName(), LocalDate.now());
+			MessageImageModel image = new MessageImageModel(message, imageContent, dto.getImageFileName(),
+					LocalDate.now());
 			message.setImage(image);
 		}
 
@@ -178,7 +200,8 @@ public class MessageService {
 
 		message.setIsEdited(Boolean.TRUE);
 
-		List<TranslationConfigurationModel> userConfigs = this.getReceiverTranslationConfigs(conversation.getId(), conversation.getParticipantsIds());
+		List<TranslationConfigurationModel> userConfigs = this.getReceiverTranslationConfigs(conversation.getId(),
+				conversation.getParticipantsIds());
 		AtomicReference<String> content = new AtomicReference<>(dto.getContent());
 		if (!CollectionUtils.isEmpty(userConfigs)) {
 			this.processContent(content, userConfigs);
@@ -200,13 +223,16 @@ public class MessageService {
 	}
 
 	private MessageModel getMessageById(Long messageId) {
-		return this.messageRepository.findById(messageId).orElseThrow(() -> new EntityNotFoundException("Message not found."));
+		return this.messageRepository.findById(messageId)
+				.orElseThrow(() -> new EntityNotFoundException("Message not found."));
 	}
 
 	public void sendWebSocketUpdate(Set<Long> userIds) {
 		userIds.forEach(userId -> {
-			List<ConversationResponseDTO> conversations = this.conversationService.findAllConversationByUserId(userId, 0);
-			this.messagingTemplate.convertAndSend("/topic/messages/" + userId, new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, conversations));
+			List<ConversationResponseDTO> conversations = this.conversationService.findAllConversationByUserId(userId,
+					0);
+			this.messagingTemplate.convertAndSend("/topic/messages/" + userId,
+					new WebSocketResponse<>(WebSocketAction.SEND_MESSAGE, conversations));
 		});
 	}
 
@@ -230,5 +256,10 @@ public class MessageService {
 				.map(UserModel::getId).collect(Collectors.toSet());
 
 		this.sendWebSocketUpdate(participantIds);
+	}
+
+	public void typingMessage(MessageTypingDTO messageTypingDTO) {
+		// TODO Auto-generated method stub
+
 	}
 }
